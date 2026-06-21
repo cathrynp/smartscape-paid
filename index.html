@@ -2311,16 +2311,41 @@
             loadPhoto(f);
     }
     function loadPhoto(f) {
-        imgType = f.type || 'image/jpeg';
-        var r = new FileReader();
-        r.onload = function(ev) {
-            imgData = ev.target.result.split(',')[1];
-            document.getElementById('preview-img').src = ev.target.result;
-            document.getElementById('upload-area').style.display = 'none';
-            document.getElementById('preview-wrap').style.display = 'block';
-            document.getElementById('photo-mismatch-notice').style.display = 'none';
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            var img = new Image();
+            img.onload = function() {
+                var maxDim = 1200;
+                var w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round(h * (maxDim / w));
+                        w = maxDim;
+                    } else {
+                        w = Math.round(w * (maxDim / h));
+                        h = maxDim;
+                    }
+                }
+                var canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                imgType = 'image/jpeg';
+                imgData = dataUrl.split(',')[1];
+                document.getElementById('preview-img').src = dataUrl;
+                document.getElementById('upload-area').style.display = 'none';
+                document.getElementById('preview-wrap').style.display = 'block';
+                document.getElementById('photo-mismatch-notice').style.display = 'none';
+            };
+            img.onerror = function() {
+                document.getElementById('photo-mismatch-text').textContent = 'That file couldn\'t be read as an image. Please try a different photo.';
+                document.getElementById('photo-mismatch-notice').style.display = 'block';
+            };
+            img.src = ev.target.result;
         };
-        r.readAsDataURL(f);
+        reader.readAsDataURL(f);
     }
     function clearPhoto() {
         imgData = null;
