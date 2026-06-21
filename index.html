@@ -4,6 +4,12 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>SmartScape — Greenprints</title>
+    <link rel="manifest" href="/manifest.json"/>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="Greenprint"/>
+    <meta name="theme-color" content="#1a3a0f"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
     <style>
@@ -950,6 +956,10 @@
             <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code? Get beta access — $15 →</a>
         </div>
     </div>
+    <div id="install-banner" style="display:none;background:#f0f7eb;border-bottom:1px solid #c8e6b8;padding:12px 16px;text-align:center;font-size:13px;color:#1a3a0f;">
+        📱 <strong>Tip:</strong> Tap the Share icon <span style="font-size:15px;">⬆️</span> below, then "Add to Home Screen" to open Greenprint like an app anytime.
+        <span style="margin-left:10px;text-decoration:underline;cursor:pointer;color:#2d6a1f;" onclick="dismissInstallBanner()">Got it</span>
+    </div>
     <header class="hero">
         <div class="hero-inner">
             <div class="hero-badge">Demo · Powered by AI</div>
@@ -1215,10 +1225,26 @@
         <span style="font-size:11px;margin-top:4px;display:block;">A demo by Cathryn Poff · Wilsonville, Oregon</span>
     </footer>
     <script>
+    function maybeShowInstallBanner() {
+        var isStandalone = window.navigator.standalone === true ||
+            window.matchMedia('(display-mode: standalone)').matches;
+        var ua = window.navigator.userAgent;
+        var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        var isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+        var dismissed = localStorage.getItem('install_banner_dismissed') === 'true';
+        if (isIOS && isSafari && !isStandalone && !dismissed) {
+            document.getElementById('install-banner').style.display = 'block';
+        }
+    }
+    function dismissInstallBanner() {
+        localStorage.setItem('install_banner_dismissed', 'true');
+        document.getElementById('install-banner').style.display = 'none';
+    }
     (function () {
         var unlocked = localStorage.getItem('greenprint_unlocked');
         if (unlocked === 'true') {
             document.getElementById('gate-overlay').classList.add('hidden');
+            maybeShowInstallBanner();
         }
     })();
 
@@ -1248,6 +1274,7 @@
             if (data.valid) {
                 localStorage.setItem('greenprint_unlocked', 'true');
                 document.getElementById('gate-overlay').classList.add('hidden');
+                maybeShowInstallBanner();
             } else {
                 errorEl.textContent = 'That code wasn\'t recognized. Please check it and try again.';
                 submitBtn.textContent = 'Unlock Greenprint Generator';
