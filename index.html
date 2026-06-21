@@ -943,6 +943,33 @@
     .gate-buy-link:hover {
         color: var(--green-deep);
     }
+
+    .install-banner {
+        display: none;
+        background: var(--green-pale);
+        border-bottom: 1px solid var(--green-light);
+        padding: 10px 16px;
+    }
+
+    .install-banner-inner {
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--green-deep);
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .install-banner-dismiss {
+        display: inline-block;
+        margin-top: 4px;
+        text-decoration: underline;
+        cursor: pointer;
+        color: var(--green-mid);
+        font-weight: 500;
+        font-size: 12px;
+    }
     </style>
 </head>
 <body>
@@ -956,10 +983,10 @@
             <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code? Get beta access — $15 →</a>
         </div>
     </div>
-    <div id="install-banner" style="display:none;background:#f0f7eb;border-bottom:1px solid #c8e6b8;padding:12px 16px;font-size:13px;line-height:1.5;color:#1a3a0f;">
-        <div style="max-width:600px;margin:0 auto;">
-            <strong>Tip:</strong> Tap the <strong>Share icon</strong> in Safari's toolbar (bottom of screen), then choose <strong>"Add to Home Screen"</strong> — Greenprint will open like an app anytime.
-            <span style="display:block;margin-top:6px;text-decoration:underline;cursor:pointer;color:#2d6a1f;font-weight:500;" onclick="dismissInstallBanner()">Got it, dismiss this tip</span>
+    <div id="install-banner" class="install-banner">
+        <div class="install-banner-inner">
+            <strong>Tip:</strong> Tap <strong>Share</strong>, then <strong>"Add to Home Screen"</strong> to open Greenprint like an app.
+            <span class="install-banner-dismiss" onclick="dismissInstallBanner()">Got it, dismiss</span>
         </div>
     </div>
     <header class="hero">
@@ -1227,6 +1254,12 @@
         <span style="font-size:11px;margin-top:4px;display:block;">A demo by Cathryn Poff · Wilsonville, Oregon</span>
     </footer>
     <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            console.log('Service worker registration failed:', err);
+        });
+    }
+
     function maybeShowInstallBanner() {
         var isStandalone = window.navigator.standalone === true ||
             window.matchMedia('(display-mode: standalone)').matches;
