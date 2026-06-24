@@ -1337,1041 +1337,425 @@
         yardSize = 'tiny';
     var PLANT_COLORS = ['#2d6a1f', '#4a9a2e', '#7bc35a', '#c8e6b8', '#1a3a0f', '#639922', '#97C459', '#3B6D11'];
     var PLANT_TYPES = {
-        shrub: {
-            r: 28,
-            label: 'Shrub'
-        },
-        perennial: {
-            r: 18,
-            label: 'Perennial'
-        },
-        groundcover: {
-            r: 14,
-            label: 'Groundcover'
-        },
-        grass: {
-            r: 16,
-            label: 'Grass'
-        },
-        tree: {
-            r: 36,
-            label: 'Tree/large shrub'
-        },
-        bulb: {
-            r: 10,
-            label: 'Bulb'
-        }
+        shrub: { r: 28, label: 'Shrub' },
+        perennial: { r: 18, label: 'Perennial' },
+        groundcover: { r: 14, label: 'Groundcover' },
+        grass: { r: 16, label: 'Grass' },
+        tree: { r: 36, label: 'Tree/large shrub' },
+        bulb: { r: 10, label: 'Bulb' }
     };
+
+    // ─── NURSERIES ────────────────────────────────────────────────────────────
+    // Each entry uses `regions` (array) so a nursery can appear for multiple
+    // adjacent states/regions. renderNurseries() matches on any region in the array.
     var NURSERIES = [
-    {
-        name: "Sparrowhawk Native Plants",
-        city: "Portland",
-        state: "OR",
-        region: "or-portland",
-        url: "https://sparrowhawknativeplants.com",
-        desc: "Women-owned. Online ordering + pop-up sales. 100% native PNW plants.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Bosky Dell Natives",
-        city: "West Linn",
-        state: "OR",
-        region: "or-portland",
-        url: "https://boskydellnatives.com",
-        desc: "Wildflowers, ferns, bulbs, shrubs & trees native to the Pacific NW.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Portland Nursery",
-        city: "Portland",
-        state: "OR",
-        region: "or-portland",
-        url: "https://portlandnursery.com",
-        desc: "Two urban locations. Native trees, shrubs, and smaller plants year-round.",
-        tags: ["retail"]
-    },
-    {
-        name: "Alder View Natives",
-        city: "Wilsonville",
-        state: "OR",
-        region: "or-portland",
-        url: "https://plantnative.org/nd_or.htm",
-        desc: "Wide variety of natives. Retail and wholesale. Located in Wilsonville.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Scholls Valley Native Nursery",
-        city: "Forest Grove",
-        state: "OR",
-        region: "or-portland",
-        url: "https://schollsvalley.com",
-        desc: "Containerized and bare-root natives for locally-adapted landscapes.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Echo Valley Natives",
-        city: "Oregon City",
-        state: "OR",
-        region: "or-portland",
-        url: "https://echovalleynatives.com",
-        desc: "Retail and wholesale PNW native plants for western Oregon.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Champoeg Nursery",
-        city: "Aurora",
-        state: "OR",
-        region: "or-willamette",
-        url: "https://champoegnursery.com",
-        desc: "Herbaceous perennial, wetland and woody plants native to the Pacific NW.",
-        tags: ["wholesale", "wetland"]
-    },
-    {
-        name: "Aurora Nursery",
-        city: "Aurora",
-        state: "OR",
-        region: "or-willamette",
-        url: "https://auroranursery.com",
-        desc: "50 acres of Willamette soil. Native and wetland plant specialist.",
-        tags: ["wholesale"]
-    },
-    {
-        name: "Sevenoaks Native Nursery",
-        city: "Albany",
-        state: "OR",
-        region: "or-willamette",
-        url: "https://sevenoaksnativenursery.com",
-        desc: "Native plants for restoration, landscaping, and conservation.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Heritage Seedlings",
-        city: "Salem",
-        state: "OR",
-        region: "or-willamette",
-        url: "https://heritageseedlings.com",
-        desc: "Willamette Valley prairie natives — grasses, sedges, forbs. Plugs and seed.",
-        tags: ["wholesale", "seed"]
-    },
-    {
-        name: "Humble Roots Nursery",
-        city: "Hood River",
-        state: "OR",
-        region: "or-gorge",
-        url: "https://humblerootsnursery.com",
-        desc: "Ethically propagated PNW natives. Columbia Gorge and drought-tolerant species.",
-        tags: ["retail"]
-    },
-    {
-        name: "Cloud Mountain Farm Center",
-        city: "Everson",
-        state: "WA",
-        region: "wa",
-        url: "https://cloudmountainfarmcenter.org",
-        desc: "Extensive PNW native plant selection. Retail and education.",
-        tags: ["retail"]
-    },
-    {
-        name: "Plantas Nativa",
-        city: "Bellingham",
-        state: "WA",
-        region: "wa",
-        url: "https://plantasnativa.com",
-        desc: "100% native. Specializes in plants native to the Pacific Northwest.",
-        tags: ["wholesale", "retail"]
-    },
-    {
-        name: "Nothing But NW Natives",
-        city: "Woodland",
-        state: "WA",
-        region: "wa",
-        url: "https://nothingbutnwnatives.com",
-        desc: "Wide variety of native plants for Washington and Oregon.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Swansons Nursery",
-        city: "Seattle",
-        state: "WA",
-        region: "wa",
-        url: "https://swansonsnursery.com",
-        desc: "Retail nursery with extensive native plant selection.",
-        tags: ["retail"]
-    },
-    {
-        name: "Bay Natives",
-        city: "San Francisco",
-        state: "CA",
-        region: "ca-bay",
-        url: "https://baynatives.com",
-        desc: "Rare and endemic Bay Area natives. 100% native.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Native Here Nursery",
-        city: "Berkeley",
-        state: "CA",
-        region: "ca-bay",
-        url: "https://nativeherenursery.org",
-        desc: "Plants native to Alameda and Contra Costa counties. Saturdays + online.",
-        tags: ["retail"]
-    },
-    {
-        name: "Yerba Buena Nursery",
-        city: "Half Moon Bay",
-        state: "CA",
-        region: "ca-bay",
-        url: "https://yerbabuenanursery.com",
-        desc: "California's oldest native plant retail nursery. 60+ years.",
-        tags: ["retail"]
-    },
-    {
-        name: "The Watershed Nursery",
-        city: "Richmond",
-        state: "CA",
-        region: "ca-bay",
-        url: "https://watershednursery.com",
-        desc: "CA native plants. Bay Area delivery. Wholesale available.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "California Flora Nursery",
-        city: "Fulton",
-        state: "CA",
-        region: "ca-sonoma",
-        url: "https://calfloranursery.com",
-        desc: "100% devoted to natives. Sonoma focus. Pollinator-friendly, low-water, fire-safe.",
-        tags: ["retail"]
-    },
-    {
-        name: "Sonoma Ecology Center Native Plant Nursery",
-        city: "Sonoma",
-        state: "CA",
-        region: "ca-sonoma",
-        url: "https://sonomaecologycenter.org/nativeplantnursery",
-        desc: "Native plants at Sonoma Garden Park. Fridays and by appointment.",
-        tags: ["retail"]
-    },
-    {
-        name: "Mostly Natives Nursery",
-        city: "Point Reyes Station",
-        state: "CA",
-        region: "ca-sonoma",
-        url: "https://mostlynatives.com",
-        desc: "Native and drought-tolerant plants for northern California.",
-        tags: ["retail"]
-    },
-    {
-        name: "Desert Survivors Nursery",
-        city: "Tucson",
-        state: "AZ",
-        region: "az",
-        url: "https://desertsurvivors.org",
-        desc: "Non-profit. Extensive desert native selection. Tucson's premier source.",
-        tags: ["retail", "nonprofit"]
-    },
-    {
-        name: "Spadefoot Nursery",
-        city: "Tucson",
-        state: "AZ",
-        region: "az",
-        url: "https://spadefootnursery.com",
-        desc: "100% native. Locally grown Sonoran Desert plants. Retail pickup Fri–Sun.",
-        tags: ["retail"]
-    },
-    {
-        name: "Flagstaff Native Plant & Seed",
-        city: "Flagstaff",
-        state: "AZ",
-        region: "az",
-        url: "https://nativeplantandseed.com",
-        desc: "Plants and seeds native to Northern Arizona, grown from local seed.",
-        tags: ["retail", "seed"]
-    },
-    {
-        name: "Borderlands Native Plants & Seeds",
-        city: "Patagonia",
-        state: "AZ",
-        region: "az",
-        url: "https://borderlandsplants.org",
-        desc: "Pollinator-safe, chemical-free SE Arizona natives.",
-        tags: ["retail", "seed"]
-    },
-    {
-        name: "Native Seeds/SEARCH",
-        city: "Tucson",
-        state: "AZ",
-        region: "az",
-        url: "https://nativeseeds.org",
-        desc: "350+ varieties of heirloom seeds from traditional crops of the SW US.",
-        tags: ["seed", "nonprofit"]
-    },
-    {
-        name: "Arizona Native Plant Society",
-        city: "Statewide",
-        state: "AZ",
-        region: "az",
-        url: "https://aznps.com",
-        desc: "Hosts seasonal native plant sales in Phoenix, Tucson, and Flagstaff.",
-        tags: ["resource", "events"]
-    },
-    {
-        name: "Michiganense Natives",
-        city: "Plymouth",
-        state: "MI",
-        region: "mi",
-        url: "https://michiganensenatives.com",
-        desc: "Metro Detroit's retail native nursery. 250+ MI species. Pesticide-free.",
-        tags: ["retail"]
-    },
-    {
-        name: "Detroit Wildflower Nursery",
-        city: "Farmington Hills",
-        state: "MI",
-        region: "mi",
-        url: "https://detroitwildflowers.com",
-        desc: "Organic, pesticide-free wildflowers native to Michigan and the Great Lakes.",
-        tags: ["retail"]
-    },
-    {
-        name: "New Leaf Natives",
-        city: "Manchester",
-        state: "MI",
-        region: "mi",
-        url: "https://newleafnatives.com",
-        desc: "300+ native species. Mail-order shipping available.",
-        tags: ["retail", "wholesale", "ships"]
-    },
-    {
-        name: "Windy Rock Farm & Nursery",
-        city: "Manchester",
-        state: "MI",
-        region: "mi",
-        url: "https://windyrocknursery.com",
-        desc: "Fully retail. 80+ varieties of native perennials and shrubs.",
-        tags: ["retail"]
-    },
-    {
-        name: "Michigan Wildflower Farm",
-        city: "Portland",
-        state: "MI",
-        region: "mi",
-        url: "https://michiganwildflowerfarm.com",
-        desc: "Michigan genotype natives since 1996. Trees, shrubs, grasses, wildflowers.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Feral Flora",
-        city: "Ann Arbor",
-        state: "MI",
-        region: "mi",
-        url: "https://feral-flora.com",
-        desc: "Michigan-native plants from wild-collected seed. Online sales.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Lynette's Native Plants",
-        city: "Greensboro Bend",
-        state: "VT",
-        region: "vt",
-        url: "https://plantnative.org/nd_patova.htm",
-        desc: "Vermont native plant nursery. Retail. Northeastern native species.",
-        tags: ["retail"]
-    },
-    {
-        name: "Project Native",
-        city: "Housatonic",
-        state: "MA",
-        region: "vt",
-        url: "https://projectnative.org",
-        desc: "Non-profit. 170+ varieties native to W. Massachusetts, E. New York, NW Connecticut, S. Vermont. Ships.",
-        tags: ["retail", "nonprofit", "ships"]
-    },
-    {
-        name: "New England Wild Flower Society",
-        city: "Framingham",
-        state: "MA",
-        region: "vt",
-        url: "https://newenglandwild.org",
-        desc: "America's oldest plant conservation org. Plant sales and expert resources.",
-        tags: ["retail", "resource", "events"]
-    },
-    {
-        name: "Burnt Meadow Nursery",
-        city: "Brownfield",
-        state: "ME",
-        region: "vt",
-        url: "https://burntmeadow.com",
-        desc: "100% native woody plants native to New England. Wholesale.",
-        tags: ["wholesale"]
-    },
-    {
-        name: "Ānuenue Native Plants",
-        city: "Kauai",
-        state: "HI",
-        region: "hi",
-        url: "https://anuenuenativeplants.com",
-        desc: "Kauai-based. 100% native Hawaiian plants. Pickup and on-island delivery.",
-        tags: ["retail"]
-    },
-    {
-        name: "Kauai Nursery & Landscaping",
-        city: "Lihue",
-        state: "HI",
-        region: "hi",
-        url: "https://kauainursery.com",
-        desc: "Kauai's largest nursery including native Hawaiian plants. 45+ years.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Hui Ku Maoli Ola",
-        city: "Kaneohe, Oahu",
-        state: "HI",
-        region: "hi",
-        url: "https://nativeplants.hawaii.edu",
-        desc: "100+ native Hawaiian species. Home gardens to large restoration projects.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Hawaii DLNR State Tree Nursery",
-        city: "Statewide",
-        state: "HI",
-        region: "hi",
-        url: "https://dlnr.hawaii.gov/forestry/info/nurseries",
-        desc: "Native and endangered Hawaiian plants available to the public.",
-        tags: ["retail", "resource"]
-    },
-    {
-        name: "Prairie Moon Nursery",
-        city: "Winona",
-        state: "MN",
-        region: "national",
-        url: "https://prairiemoon.com",
-        desc: "Ships nationwide. 600+ native species — seeds, plugs, and plants for every US region.",
-        tags: ["ships", "seed"]
-    },
-    {
-        name: "American Meadows",
-        city: "Williston",
-        state: "VT",
-        region: "national",
-        url: "https://americanmeadows.com",
-        desc: "Ships nationwide. Native wildflower seeds and plants for every US climate zone.",
-        tags: ["ships", "seed"]
-    },
-    {
-        name: "PlantNative.org Directory",
-        city: "National",
-        state: "US",
-        region: "national",
-        url: "https://plantnative.org/national_nursery_dir_main.htm",
-        desc: "871+ native plant nurseries searchable by state. The most comprehensive national directory.",
-        tags: ["resource", "directory"]
-    },
-    {
-        name: "Prairie Nursery",
-        city: "Westfield",
-        state: "WI",
-        region: "national",
-        url: "https://prairienursery.com",
-        desc: "Ships nationwide. High-quality native plants and seeds for prairies, woodlands, and wetlands.",
-        tags: ["ships", "seed"]
-    },
-    {
-        name: "Wild Ones Native Plant Nursery Finder",
-        city: "National",
-        state: "US",
-        region: "national",
-        url: "https://nativegardendesigns.wildones.org/nursery-list",
-        desc: "State-by-state directory of nurseries endorsed by Wild Ones as trustworthy native plant sources.",
-        tags: ["resource", "directory"]
-    },
-    {
-        name: "Eco Blossom Nursery",
-        city: "Fort Worth",
-        state: "TX",
-        region: "tx",
-        url: "https://ecoblossom.com",
-        desc: "Woman-owned. 100% Texas native plants, neonic-free. 5% of sales to TX environmental nonprofits. Online ordering + pickup.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Hill Country Natives",
-        city: "Leander",
-        state: "TX",
-        region: "tx",
-        url: "https://hillcountrynatives.com",
-        desc: "Native trees, shrubs and perennials of the Texas Hill Country. Specializes in smaller ornamental trees.",
-        tags: ["retail"]
-    },
-    {
-        name: "Natives of Texas",
-        city: "Kerrville",
-        state: "TX",
-        region: "tx",
-        url: "https://nativesoftexas.com",
-        desc: "Deals exclusively in plants native to the Texas Hill Country. Extensive perennials, shrubs, and trees.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Native Plant Society of Texas",
-        city: "Statewide",
-        state: "TX",
-        region: "tx",
-        url: "https://npsot.org",
-        desc: "Hosts regional native plant sales across Texas. Expert resource for TX-native species.",
-        tags: ["resource", "events"]
-    },
-    {
-        name: "Lady Bird Johnson Wildflower Center",
-        city: "Austin",
-        state: "TX",
-        region: "tx",
-        url: "https://wildflower.org",
-        desc: "The national authority on native plants. Plant sales, supplier directory, and expert resources.",
-        tags: ["retail", "resource"]
-    },
-    {
-        name: "Florida Native Plants Nursery",
-        city: "Sarasota",
-        state: "FL",
-        region: "fl",
-        url: "https://floridanativeplants.com",
-        desc: "Premier FL native plant nursery since 1995. Butterfly and wildlife plants, wildflowers, shrubs, trees, ferns.",
-        tags: ["retail"]
-    },
-    {
-        name: "Native Nurseries of Tallahassee",
-        city: "Tallahassee",
-        state: "FL",
-        region: "fl",
-        url: "https://nativenurseries.com",
-        desc: "100% native. Trees, shrubs, and wildflowers native to N. Florida. Also stocks native wildflower seed.",
-        tags: ["retail"]
-    },
-    {
-        name: "Wilcox Nursery & Landscape",
-        city: "Largo",
-        state: "FL",
-        region: "fl",
-        url: "https://wilcoxnursery.com",
-        desc: "Family business since 1941. Dedicated to Florida native plants and ecologically balanced landscapes.",
-        tags: ["retail"]
-    },
-    {
-        name: "Florida Native Plant Society",
-        city: "Statewide",
-        state: "FL",
-        region: "fl",
-        url: "https://fnps.org",
-        desc: "Statewide resource. Hosts native plant sales and events. Chapter sales across all Florida regions.",
-        tags: ["resource", "events"]
-    },
-    {
-        name: "Nearly Native Nursery",
-        city: "Fayetteville",
-        state: "GA",
-        region: "ga",
-        url: "https://nearlynativenursery.com",
-        desc: "Retail native plant nursery specializing in SE native species for wildlife habitat.",
-        tags: ["retail"]
-    },
-    {
-        name: "Flat Creek Natives",
-        city: "Perry",
-        state: "GA",
-        region: "ga",
-        url: "https://flatcreeknatives.com",
-        desc: "Georgia native plants for restoration and landscaping. Retail and wholesale.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Carolina Native Nursery",
-        city: "Burnsville",
-        state: "NC",
-        region: "ga",
-        url: "https://carolinanativenursery.com",
-        desc: "Largest native azalea producer in the US. Broad selection of SE native plants.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "NC Native Plant Society",
-        city: "Statewide",
-        state: "NC",
-        region: "ga",
-        url: "https://ncwildflower.org/native-plant-nurseries",
-        desc: "Curated list of NC native plant nurseries. All sell nursery-propagated plants only.",
-        tags: ["resource", "directory"]
-    },
-    {
-        name: "Plum Creek Garden Market",
-        city: "Denver area",
-        state: "CO",
-        region: "co",
-        url: "https://plumcreekgardenmarket.com/natives",
-        desc: "Multiple Front Range pop-up locations. Large selection of Colorado native perennials and grasses.",
-        tags: ["retail"]
-    },
-    {
-        name: "Colorado Native Plant Society",
-        city: "Statewide",
-        state: "CO",
-        region: "co",
-        url: "https://conps.org",
-        desc: "Hosts native plant sales across Colorado. Expert resource for high-altitude and prairie natives.",
-        tags: ["resource", "events"]
-    },
-    {
-        name: "Blazing Star Nursery",
-        city: "Woodstock",
-        state: "IL",
-        region: "il",
-        url: "https://blazingstar.com",
-        desc: "Illinois native plants for prairies, woodlands, and wetlands. Retail and wholesale.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Illinois Plants Native Nursery Directory",
-        city: "Statewide",
-        state: "IL",
-        region: "il",
-        url: "https://illinoisplants.org/native-plant-nurseries",
-        desc: "Comprehensive directory of Illinois native plant nurseries by region.",
-        tags: ["resource", "directory"]
-    },
-    {
-        name: "Sow Wild Natives",
-        city: "Kansas City",
-        state: "MO",
-        region: "ks",
-        url: "https://sowwildnatives.com",
-        desc: "Retail storefront in Kansas City. Native wildflowers and grasses, function and beauty.",
-        tags: ["retail"]
-    },
-    {
-        name: "City Roots Nursery",
-        city: "Kansas City",
-        state: "MO",
-        region: "ks",
-        url: "https://cityrootsnursery.com",
-        desc: "Native trees, shrubs and perennials of Missouri and Kansas. Two locations in KC metro.",
-        tags: ["retail"]
-    },
-    {
-        name: "Vinland Valley Nursery",
-        city: "Baldwin City",
-        state: "KS",
-        region: "ks",
-        url: "https://vinlandvalleynursery.com",
-        desc: "280+ native species, organic, pesticide-free. Butterfly gardening specialists.",
-        tags: ["retail"]
-    },
-    {
-        name: "Grow Native! Missouri",
-        city: "Statewide",
-        state: "MO",
-        region: "ks",
-        url: "https://grownative.org",
-        desc: "Searchable native plant database + seasonal native plant sales across Missouri.",
-        tags: ["resource", "events"]
-    },
-    {
-        name: "Prairie Restorations",
-        city: "Princeton",
-        state: "MN",
-        region: "mn",
-        url: "https://prairierestorations.com",
-        desc: "Native plants and seeds for prairies, woodlands, and wetlands. Retail and wholesale.",
-        tags: ["retail", "wholesale", "seed"]
-    },
-    {
-        name: "Landscape Alternatives",
-        city: "Shafer",
-        state: "MN",
-        region: "mn",
-        url: "https://landscapealternatives.org",
-        desc: "Minnesota native plants for home gardens and restoration. Retail nursery.",
-        tags: ["retail"]
-    },
-    {
-        name: "Ohio Prairie Nursery",
-        city: "Hiram",
-        state: "OH",
-        region: "oh",
-        url: "https://ohioprairie.com",
-        desc: "Native Ohio prairie and woodland plants. Ships within OH and surrounding states.",
-        tags: ["retail", "ships"]
-    },
-    {
-        name: "Leaves for Wildlife Native Plant Nursery",
-        city: "Sunbury",
-        state: "OH",
-        region: "oh",
-        url: "https://leaveswildlife.com",
-        desc: "Midwest native trees, shrubs, perennials, and spring ephemerals. Online shop and plant sales.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Bowman's Hill Wildflower Preserve Nursery",
-        city: "New Hope",
-        state: "PA",
-        region: "pa",
-        url: "https://bhwp.org",
-        desc: "All native plants, many grown from seed on site. Expert staff. No shipping — visit in person.",
-        tags: ["retail"]
-    },
-    {
-        name: "North Creek Nurseries",
-        city: "Landenberg",
-        state: "PA",
-        region: "pa",
-        url: "https://northcreeknurseries.com",
-        desc: "Wholesale native plant propagation. Eastern US native perennials, grasses, ferns and shrubs.",
-        tags: ["wholesale"]
-    },
-    {
-        name: "Chesapeake Natives",
-        city: "Upper Marlboro",
-        state: "MD",
-        region: "pa",
-        url: "https://chesapeakenatives.com",
-        desc: "Native plants for the Mid-Atlantic region. Retail and wholesale.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Native Plant Center at SUNY",
-        city: "Valhalla",
-        state: "NY",
-        region: "ny",
-        url: "https://nativeplantcenter.org",
-        desc: "Native plants of the Northeast. Annual plant sale, expert resources, and regional plant lists.",
-        tags: ["retail", "resource", "events"]
-    },
-    {
-        name: "Pinelands Nursery",
-        city: "Columbus",
-        state: "NJ",
-        region: "ny",
-        url: "https://pinelandsnursery.com",
-        desc: "Ships native plants nationwide. Specializes in Mid-Atlantic and Northeast natives.",
-        tags: ["wholesale", "ships"]
-    },
-    {
-        name: "Tennessee Naturescapes",
-        city: "Tennessee",
-        state: "TN",
-        region: "tn",
-        url: "https://tennesseenaturescapes.com",
-        desc: "Native trees, shrubs, wildflowers, ferns and grasses. Retail and mail order.",
-        tags: ["retail", "ships"]
-    },
-    {
-        name: "GroWild Inc.",
-        city: "Fairview",
-        state: "TN",
-        region: "tn",
-        url: "https://growildinc.com",
-        desc: "1,000+ native species. One of the leading native plant nurseries in the eastern US. By appointment.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Petals From the Past",
-        city: "Jemison",
-        state: "AL",
-        region: "tn",
-        url: "https://petalsfromthepast.com",
-        desc: "Alabama native plants. Retail nursery with excellent regional selection.",
-        tags: ["retail"]
-    },
-    {
-        name: "Carolina Wild",
-        city: "Anderson",
-        state: "SC",
-        region: "tn",
-        url: "https://carolinawild.com",
-        desc: "South Carolina native plants for home gardens and habitat restoration.",
-        tags: ["retail"]
-    },
-    {
-        name: "Great Basin Natives",
-        city: "Holden",
-        state: "UT",
-        region: "ut",
-        url: "https://greatbasinnatives.com",
-        desc: "Rocky Mountain native perennials, shrubs, trees. Retail, wholesale, mail order.",
-        tags: ["retail", "wholesale", "ships"]
-    },
-    {
-        name: "Center for Native Plants",
-        city: "Whitefish",
-        state: "MT",
-        region: "mt",
-        url: "https://centerfornativeplants.com",
-        desc: "Flathead Valley's only retail native plant nursery. 200+ species native to Montana and Intermountain NW.",
-        tags: ["retail"]
-    },
-    {
-        name: "Great Bear Native Plants",
-        city: "Hamilton",
-        state: "MT",
-        region: "mt",
-        url: "https://greatbearnativeplants.com",
-        desc: "High quality containerized plants native to Western North America. Retail, wholesale, and shipping.",
-        tags: ["retail", "wholesale", "ships"]
-    },
-    {
-        name: "Plants of the Southwest",
-        city: "Albuquerque",
-        state: "NM",
-        region: "nm",
-        url: "https://plantsofthesouthwest.com",
-        desc: "Native plants and seeds for the desert Southwest. 40+ years of regional expertise. Mail order.",
-        tags: ["retail", "seed", "ships"]
-    },
-    {
-        name: "Nebraska Statewide Arboretum",
-        city: "Lincoln",
-        state: "NE",
-        region: "ne",
-        url: "https://plantnebraska.org",
-        desc: "Native trees, shrubs, grasses and perennials adapted to the Great Plains. Online store.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Prairie Plains Resource Institute",
-        city: "Aurora",
-        state: "NE",
-        region: "ne",
-        url: "https://prairieplains.org",
-        desc: "Local ecotype seed and plants for prairie restoration. Nebraska and Great Plains focus.",
-        tags: ["retail", "seed"]
-    },
-    {
-        name: "Johnson's Nursery",
-        city: "Menomonee Falls",
-        state: "WI",
-        region: "wi",
-        url: "https://johnsonsnursery.com",
-        desc: "Many natives grown from wild-collected local seed. Wide array of trees, shrubs and perennials.",
-        tags: ["retail", "wholesale"]
-    },
-    {
-        name: "Two Ferns Native Nursery",
-        city: "Madison",
-        state: "WI",
-        region: "wi",
-        url: "https://twofernsnativenursery.com",
-        desc: "Woman-owned. Diverse native perennials. Online shop and pickup.",
-        tags: ["retail", "online"]
-    },
-    {
-        name: "Earth Tones Native Plants",
-        city: "Woodbury",
-        state: "CT",
-        region: "ct",
-        url: "https://earthtonesnativeplants.com",
-        desc: "Connecticut native plants. Strong pollinator and woodland plant selection.",
-        tags: ["retail"]
-    },
-    {
-        name: "Izel Native Plants",
-        city: "Online",
-        state: "US",
-        region: "va",
-        url: "https://izelplants.com",
-        desc: "Online aggregator of multiple native plant nurseries. Mid-Atlantic and beyond. Ships nationwide.",
-        tags: ["retail", "online", "ships"]
-    },
-    {
-        name: "Garden for Wildlife",
-        city: "National",
-        state: "US",
-        region: "national",
-        url: "https://gardenforwildlife.com",
-        desc: "Ships native plants to all 50 states organized by state — enter your state for region-specific species.",
-        tags: ["ships", "online"]
-    },
+    // ── Oregon ──
+    { name:"Sparrowhawk Native Plants", city:"Portland", state:"OR", regions:["or-portland"], url:"https://sparrowhawknativeplants.com", desc:"Women-owned. Online ordering + pop-up sales. 100% native PNW plants.", tags:["retail","online"] },
+    { name:"Bosky Dell Natives", city:"West Linn", state:"OR", regions:["or-portland"], url:"https://boskydellnatives.com", desc:"Wildflowers, ferns, bulbs, shrubs & trees native to the Pacific NW.", tags:["retail","wholesale"] },
+    { name:"Portland Nursery", city:"Portland", state:"OR", regions:["or-portland"], url:"https://portlandnursery.com", desc:"Two urban locations. Native trees, shrubs, and smaller plants year-round.", tags:["retail"] },
+    { name:"Alder View Natives", city:"Wilsonville", state:"OR", regions:["or-portland"], url:"https://plantnative.org/nd_or.htm", desc:"Wide variety of natives. Retail and wholesale. Located in Wilsonville.", tags:["retail","wholesale"] },
+    { name:"Scholls Valley Native Nursery", city:"Forest Grove", state:"OR", regions:["or-portland"], url:"https://schollsvalley.com", desc:"Containerized and bare-root natives for locally-adapted landscapes.", tags:["retail","wholesale"] },
+    { name:"Echo Valley Natives", city:"Oregon City", state:"OR", regions:["or-portland"], url:"https://echovalleynatives.com", desc:"Retail and wholesale PNW native plants for western Oregon.", tags:["retail","wholesale"] },
+    { name:"Champoeg Nursery", city:"Aurora", state:"OR", regions:["or-willamette"], url:"https://champoegnursery.com", desc:"Herbaceous perennial, wetland and woody plants native to the Pacific NW.", tags:["wholesale","wetland"] },
+    { name:"Aurora Nursery", city:"Aurora", state:"OR", regions:["or-willamette"], url:"https://auroranursery.com", desc:"50 acres of Willamette soil. Native and wetland plant specialist.", tags:["wholesale"] },
+    { name:"Sevenoaks Native Nursery", city:"Albany", state:"OR", regions:["or-willamette"], url:"https://sevenoaksnativenursery.com", desc:"Native plants for restoration, landscaping, and conservation.", tags:["retail","wholesale"] },
+    { name:"Heritage Seedlings", city:"Salem", state:"OR", regions:["or-willamette"], url:"https://heritageseedlings.com", desc:"Willamette Valley prairie natives — grasses, sedges, forbs. Plugs and seed.", tags:["wholesale","seed"] },
+    { name:"Humble Roots Nursery", city:"Hood River", state:"OR", regions:["or-gorge"], url:"https://humblerootsnursery.com", desc:"Ethically propagated PNW natives. Columbia Gorge and drought-tolerant species.", tags:["retail"] },
+    { name:"Siskiyou Rare Plant Nursery", city:"Medford", state:"OR", regions:["or-southern"], url:"https://siskiyourareplantnursery.com", desc:"Rare and unusual plants of the Siskiyou and Cascade ranges. SW Oregon specialists.", tags:["retail","ships"] },
+    { name:"Oregon Department of Forestry Native Nursery", city:"Statewide", state:"OR", regions:["or-southern"], url:"https://www.oregon.gov/odf/forestbenefits/pages/nursery.aspx", desc:"Native seedlings for restoration across Oregon including eastern and southern regions. Contact for availability.", tags:["resource"] },
+    // ── Washington ──
+    { name:"Cloud Mountain Farm Center", city:"Everson", state:"WA", regions:["wa"], url:"https://cloudmountainfarmcenter.org", desc:"Extensive PNW native plant selection. Retail and education.", tags:["retail"] },
+    { name:"Plantas Nativa", city:"Bellingham", state:"WA", regions:["wa"], url:"https://plantasnativa.com", desc:"100% native. Specializes in plants native to the Pacific Northwest.", tags:["wholesale","retail"] },
+    { name:"Nothing But NW Natives", city:"Woodland", state:"WA", regions:["wa","or-portland"], url:"https://nothingbutnwnatives.com", desc:"Wide variety of native plants for Washington and Oregon.", tags:["retail","wholesale"] },
+    { name:"Swansons Nursery", city:"Seattle", state:"WA", regions:["wa"], url:"https://swansonsnursery.com", desc:"Retail nursery with extensive native plant selection.", tags:["retail"] },
+    // ── California — Bay Area ──
+    { name:"Bay Natives", city:"San Francisco", state:"CA", regions:["ca-bay"], url:"https://baynatives.com", desc:"Rare and endemic Bay Area natives. 100% native.", tags:["retail","online"] },
+    { name:"Native Here Nursery", city:"Berkeley", state:"CA", regions:["ca-bay"], url:"https://nativeherenursery.org", desc:"Plants native to Alameda and Contra Costa counties. Saturdays + online.", tags:["retail"] },
+    { name:"Yerba Buena Nursery", city:"Half Moon Bay", state:"CA", regions:["ca-bay"], url:"https://yerbabuenanursery.com", desc:"California's oldest native plant retail nursery. 60+ years.", tags:["retail"] },
+    { name:"The Watershed Nursery", city:"Richmond", state:"CA", regions:["ca-bay"], url:"https://watershednursery.com", desc:"CA native plants. Bay Area delivery. Wholesale available.", tags:["retail","wholesale"] },
+    // ── California — Sonoma / North Bay ──
+    { name:"California Flora Nursery", city:"Fulton", state:"CA", regions:["ca-sonoma"], url:"https://calfloranursery.com", desc:"100% devoted to natives. Sonoma focus. Pollinator-friendly, low-water, fire-safe.", tags:["retail"] },
+    { name:"Sonoma Ecology Center Native Plant Nursery", city:"Sonoma", state:"CA", regions:["ca-sonoma"], url:"https://sonomaecologycenter.org/nativeplantnursery", desc:"Native plants at Sonoma Garden Park. Fridays and by appointment.", tags:["retail"] },
+    { name:"Mostly Natives Nursery", city:"Point Reyes Station", state:"CA", regions:["ca-sonoma"], url:"https://mostlynatives.com", desc:"Native and drought-tolerant plants for northern California.", tags:["retail"] },
+    // ── California — Sacramento Valley ──
+    { name:"SacValley CNPS Native Plant Nursery", city:"Rancho Cordova", state:"CA", regions:["ca-sacramento"], url:"https://sacvalleycnps.org/nursery", desc:"Volunteer-run nursery at Soil Born Farms on the American River Parkway. Spring and fall online sales; in-person Wednesdays.", tags:["retail","events"] },
+    { name:"Cornflower Farms", city:"Elk Grove", state:"CA", regions:["ca-sacramento"], url:"https://cornflowerfarms.com", desc:"Sacramento-area native plant supplier. Supplies CNPS chapter sales. Contact for retail availability.", tags:["wholesale","retail"] },
+    { name:"Miridae Mobile Nursery", city:"Sacramento", state:"CA", regions:["ca-sacramento"], url:"https://miridae.com/mobilenursery", desc:"UC Davis ecologists bring one of the largest retail native plant selections to your neighborhood via pop-up sales.", tags:["retail","events"] },
+    { name:"Sacramento Valley Conservancy Nursery", city:"Sacramento", state:"CA", regions:["ca-sacramento"], url:"https://sacramentovalleyconservancy.org/nursery", desc:"Spring and fall native plant sales. Online order and pickup at Camp Pollock on the American River Parkway.", tags:["retail","events"] },
+    // ── California — Southern California ──
+    { name:"Artemisia Nursery", city:"Los Angeles", state:"CA", regions:["ca-socal"], url:"https://artemisianursery.com", desc:"Retail nursery in NE Los Angeles specializing in California natives. 5068 Valley Blvd.", tags:["retail"] },
+    { name:"Grow Native Nursery at CA Botanic Garden", city:"Claremont", state:"CA", regions:["ca-socal"], url:"https://calbg.org/visit/grow-native-nursery", desc:"Nation's largest botanic garden devoted to CA natives. 22,000+ plants on 86 acres. Open seasonally.", tags:["retail"] },
+    { name:"Moosa Creek Nursery", city:"Valley Center", state:"CA", regions:["ca-socal"], url:"https://moosacreeknursery.com", desc:"Sustainably grown CA native plants since 2004. Retail, wholesale, and statewide delivery. San Diego County.", tags:["retail","wholesale","ships"] },
+    { name:"Native West Nursery", city:"San Diego", state:"CA", regions:["ca-socal"], url:"https://nativewest.com", desc:"130-acre San Diego County nursery. The Little Barn retail shop open Thu–Sun. 100% western US natives.", tags:["retail","wholesale"] },
+    { name:"Las Pilitas Nursery", city:"Santa Margarita", state:"CA", regions:["ca-socal","ca-sacramento"], url:"https://laspilitas.com", desc:"100% California natives. Retail Fri–Sat in Central CA; ships to LA, San Diego, SF next-day via UPS.", tags:["retail","ships"] },
+    { name:"CNPS Southern CA — Native Plant Society", city:"Statewide", state:"CA", regions:["ca-socal"], url:"https://cnps.org", desc:"Hosts native plant sales across Southern California. Chapters in LA, San Diego, Orange County, and Inland Empire.", tags:["resource","events"] },
+    { name:"Calscape Nursery Finder", city:"Statewide", state:"CA", regions:["ca-socal","ca-sacramento","ca-bay","ca-sonoma"], url:"https://calscape.org/california-nurseries", desc:"Interactive map of 200+ CA native plant nurseries with current inventory. Enter your zip for the closest options.", tags:["resource","directory"] },
+    // ── Nevada ──
+    { name:"Nevada Division of Forestry — Washoe Conservation Nursery", city:"Washoe Valley", state:"NV", regions:["nv-reno"], url:"https://forestry.nv.gov/washoe-state-tree-nursery", desc:"State nursery producing Great Basin and Sierra Nevada natives. Seasonal public sales.", tags:["retail","resource"] },
+    { name:"Nevada Native Plant Society", city:"Statewide", state:"NV", regions:["nv-reno","nv-vegas"], url:"https://nvnps.org", desc:"Hosts native plant sales in Reno, Las Vegas, and Elko. Best resource for current local native plant sources.", tags:["resource","events"] },
+    { name:"UNR Extension — Nevada Native Plant Nursery List", city:"Reno", state:"NV", regions:["nv-reno"], url:"https://extension.unr.edu/publication.aspx?PubID=6921", desc:"University of Nevada Cooperative Extension's curated, updated 2025 list of NV native plant nurseries and seed suppliers.", tags:["resource","directory"] },
+    { name:"Mojave Bloom Nursery", city:"Las Vegas", state:"NV", regions:["nv-vegas"], url:"https://mojavebloomnv.com", desc:"Community-focused desert native nursery. Founded 2024 by award-winning horticulturist Norm Schilling. Events and education.", tags:["retail"] },
+    { name:"Nevada Division of Forestry — Las Vegas Conservation Nursery", city:"Las Vegas", state:"NV", regions:["nv-vegas"], url:"https://forestry.nv.gov/las-vegas-tree-nursery", desc:"State nursery producing Mojave Desert natives. Seasonal public plant sales — check website for dates.", tags:["retail","resource"] },
+    { name:"Cactus Joe's Blue Diamond Nursery", city:"Blue Diamond", state:"NV", regions:["nv-vegas"], url:"https://cactusjoeslv.com", desc:"Nevada's premier cactus and desert nursery since 1989. 7 acres of native and drought-tolerant desert plants.", tags:["retail"] },
+    // ── Arizona ──
+    { name:"Desert Survivors Nursery", city:"Tucson", state:"AZ", regions:["az"], url:"https://desertsurvivors.org", desc:"Non-profit. Extensive desert native selection. Tucson's premier source.", tags:["retail","nonprofit"] },
+    { name:"Spadefoot Nursery", city:"Tucson", state:"AZ", regions:["az"], url:"https://spadefootnursery.com", desc:"100% native. Locally grown Sonoran Desert plants. Retail pickup Fri–Sun.", tags:["retail"] },
+    { name:"Flagstaff Native Plant & Seed", city:"Flagstaff", state:"AZ", regions:["az"], url:"https://nativeplantandseed.com", desc:"Plants and seeds native to Northern Arizona, grown from local seed.", tags:["retail","seed"] },
+    { name:"Borderlands Native Plants & Seeds", city:"Patagonia", state:"AZ", regions:["az"], url:"https://borderlandsplants.org", desc:"Pollinator-safe, chemical-free SE Arizona natives.", tags:["retail","seed"] },
+    { name:"Native Seeds/SEARCH", city:"Tucson", state:"AZ", regions:["az"], url:"https://nativeseeds.org", desc:"350+ varieties of heirloom seeds from traditional crops of the SW US.", tags:["seed","nonprofit"] },
+    { name:"Arizona Native Plant Society", city:"Statewide", state:"AZ", regions:["az"], url:"https://aznps.com", desc:"Hosts seasonal native plant sales in Phoenix, Tucson, and Flagstaff.", tags:["resource","events"] },
+    // ── New Mexico ──
+    { name:"Plants of the Southwest", city:"Albuquerque", state:"NM", regions:["nm"], url:"https://plantsofthesouthwest.com", desc:"Native plants and seeds for the desert Southwest. 40+ years of regional expertise. Mail order.", tags:["retail","seed","ships"] },
+    { name:"New Mexico Native Plant Society", city:"Statewide", state:"NM", regions:["nm"], url:"https://nmnps.org", desc:"Hosts native plant sales across New Mexico. Expert resource for high-desert and Chihuahuan Desert natives.", tags:["resource","events"] },
+    // ── Utah ──
+    { name:"Great Basin Natives", city:"Holden", state:"UT", regions:["ut","nv-reno","wy"], url:"https://greatbasinnatives.com", desc:"Rocky Mountain native perennials, shrubs, trees. Retail, wholesale, mail order. Ships to NV, WY, CO, MT.", tags:["retail","wholesale","ships"] },
+    { name:"Utah Native Plant Society", city:"Statewide", state:"UT", regions:["ut"], url:"https://unps.org", desc:"Hosts native plant sales across Utah. Expert resource for Great Basin and Colorado Plateau species.", tags:["resource","events"] },
+    // ── Colorado ──
+    { name:"Plum Creek Garden Market", city:"Denver area", state:"CO", regions:["co"], url:"https://plumcreekgardenmarket.com/natives", desc:"Multiple Front Range pop-up locations. Large selection of Colorado native perennials and grasses.", tags:["retail"] },
+    { name:"Colorado Native Plant Society", city:"Statewide", state:"CO", regions:["co"], url:"https://conps.org", desc:"Hosts native plant sales across Colorado. Expert resource for high-altitude and prairie natives.", tags:["resource","events"] },
+    // ── Wyoming ──
+    { name:"Wyoming Native Plant Society", city:"Statewide", state:"WY", regions:["wy"], url:"https://wyndd.org/wynps", desc:"Wyoming native plant events and nursery guidance. Great Basin Natives (UT) and Prairie Nursery (MN) ship here.", tags:["resource","events"] },
+    // ── Montana & Idaho ──
+    { name:"Center for Native Plants", city:"Whitefish", state:"MT", regions:["mt"], url:"https://centerfornativeplants.com", desc:"Flathead Valley's only retail native plant nursery. 200+ species native to Montana and Intermountain NW.", tags:["retail"] },
+    { name:"Great Bear Native Plants", city:"Hamilton", state:"MT", regions:["mt"], url:"https://greatbearnativeplants.com", desc:"High quality containerized plants native to Western North America. Retail, wholesale, and shipping.", tags:["retail","wholesale","ships"] },
+    // ── Hawaii ──
+    { name:"Ānuenue Native Plants", city:"Kauai", state:"HI", regions:["hi"], url:"https://anuenuenativeplants.com", desc:"Kauai-based. 100% native Hawaiian plants. Pickup and on-island delivery.", tags:["retail"] },
+    { name:"Kauai Nursery & Landscaping", city:"Lihue", state:"HI", regions:["hi"], url:"https://kauainursery.com", desc:"Kauai's largest nursery including native Hawaiian plants. 45+ years.", tags:["retail","wholesale"] },
+    { name:"Hui Ku Maoli Ola", city:"Kaneohe, Oahu", state:"HI", regions:["hi"], url:"https://nativeplants.hawaii.edu", desc:"100+ native Hawaiian species. Home gardens to large restoration projects.", tags:["retail","wholesale"] },
+    { name:"Hawaii DLNR State Tree Nursery", city:"Statewide", state:"HI", regions:["hi"], url:"https://dlnr.hawaii.gov/forestry/info/nurseries", desc:"Native and endangered Hawaiian plants available to the public.", tags:["retail","resource"] },
+    // ── Texas ──
+    { name:"Eco Blossom Nursery", city:"Fort Worth", state:"TX", regions:["tx"], url:"https://ecoblossom.com", desc:"Woman-owned. 100% Texas native plants, neonic-free. 5% of sales to TX environmental nonprofits. Online ordering + pickup.", tags:["retail","online"] },
+    { name:"Hill Country Natives", city:"Leander", state:"TX", regions:["tx"], url:"https://hillcountrynatives.com", desc:"Native trees, shrubs and perennials of the Texas Hill Country. Specializes in smaller ornamental trees.", tags:["retail"] },
+    { name:"Natives of Texas", city:"Kerrville", state:"TX", regions:["tx"], url:"https://nativesoftexas.com", desc:"Deals exclusively in plants native to the Texas Hill Country. Extensive perennials, shrubs, and trees.", tags:["retail","wholesale"] },
+    { name:"Native Plant Society of Texas", city:"Statewide", state:"TX", regions:["tx"], url:"https://npsot.org", desc:"Hosts regional native plant sales across Texas. Expert resource for TX-native species.", tags:["resource","events"] },
+    { name:"Lady Bird Johnson Wildflower Center", city:"Austin", state:"TX", regions:["tx"], url:"https://wildflower.org", desc:"The national authority on native plants. Plant sales, supplier directory, and expert resources.", tags:["retail","resource"] },
+    // ── Oklahoma ──
+    { name:"Oklahoma Native Plant Society — Source Directory", city:"Statewide", state:"OK", regions:["ok"], url:"https://oknativeplants.org/plants-seeds-and-landscaping-sources", desc:"Oklahoma Native Plant Society's current list of plant and seed sources. Note: Wild Things Nursery closed summer 2025.", tags:["resource","directory"] },
+    { name:"Native Plants OKC", city:"Oklahoma City", state:"OK", regions:["ok"], url:"https://izelplants.com/native-to/oklahoma", desc:"Izel Native Plants aggregates nurseries shipping OK-native species. Wide selection of Ozark and Great Plains natives.", tags:["retail","ships"] },
+    // ── Arkansas ──
+    { name:"White River Nursery", city:"Fayetteville", state:"AR", regions:["ar"], url:"https://whiterivernursery.com", desc:"One of the largest native plant selections in NW Arkansas. Perennials, grasses, shrubs, and trees for pollinators and habitat.", tags:["retail"] },
+    { name:"Pine Ridge Gardens", city:"London / Dardanelle", state:"AR", regions:["ar"], url:"https://pineridgegardens.com", desc:"Arkansas native plant nursery under new botanist ownership since 2024. Central AR location. Contact for availability.", tags:["retail"] },
+    { name:"Arkansas Native Plant Society", city:"Statewide", state:"AR", regions:["ar"], url:"https://anps.org/resources/plant-sources", desc:"Curated list of responsibly sourced AR native plant nurseries. Updated regularly. Best starting point.", tags:["resource","directory"] },
+    // ── Louisiana ──
+    { name:"Chickadee Natives", city:"New Orleans", state:"LA", regions:["la"], url:"https://chickadeenatives.com", desc:"New Orleans native plant nursery. Local ecotypes — seed collected within 70 miles of New Orleans.", tags:["retail"] },
+    { name:"Delta Flora Native Plants", city:"New Orleans", state:"LA", regions:["la"], url:"https://deltafloranativeplants.com", desc:"Louisiana native plants and seeds for gardeners and professionals. Wildflowers, grasses, shrubs, vines, trees.", tags:["retail"] },
+    { name:"Beaver's Abundance Native Plant Nursery", city:"Baton Rouge", state:"LA", regions:["la"], url:"https://beaversabundance.com", desc:"Native plant nursery and eco-boutique. Hard-to-find LA perennials, shrubs, and trees with art by local makers.", tags:["retail"] },
+    { name:"Louisiana Native Plant Society", city:"Statewide", state:"LA", regions:["la"], url:"https://lnps.org/resources/plant-seed-sources", desc:"Maintained list of Louisiana native plant nurseries and seed sources. Best starting point for local LA sources.", tags:["resource","directory"] },
+    // ── Mississippi ──
+    { name:"Mississippi Native Plant Society", city:"Statewide", state:"MS", regions:["ms"], url:"https://msnativeplants.com", desc:"Best resource for seasonal native plant sales in Mississippi. Maintains nursery and seed source directory.", tags:["resource","events"] },
+    { name:"Almost Eden Plants", city:"Merryville", state:"LA", regions:["ms","la"], url:"https://almostedenplants.com", desc:"Louisiana-based nursery with extensive native plant selection for the Gulf South. Ships nationwide.", tags:["retail","ships"] },
+    // ── Florida ──
+    { name:"Florida Native Plants Nursery", city:"Sarasota", state:"FL", regions:["fl"], url:"https://floridanativeplants.com", desc:"Premier FL native plant nursery since 1995. Butterfly and wildlife plants, wildflowers, shrubs, trees, ferns.", tags:["retail"] },
+    { name:"Native Nurseries of Tallahassee", city:"Tallahassee", state:"FL", regions:["fl"], url:"https://nativenurseries.com", desc:"100% native. Trees, shrubs, and wildflowers native to N. Florida. Also stocks native wildflower seed.", tags:["retail"] },
+    { name:"Wilcox Nursery & Landscape", city:"Largo", state:"FL", regions:["fl"], url:"https://wilcoxnursery.com", desc:"Family business since 1941. Dedicated to Florida native plants and ecologically balanced landscapes.", tags:["retail"] },
+    { name:"Florida Native Plant Society", city:"Statewide", state:"FL", regions:["fl"], url:"https://fnps.org", desc:"Statewide resource. Hosts native plant sales and events. Chapter sales across all Florida regions.", tags:["resource","events"] },
+    // ── Georgia & Carolinas ──
+    { name:"Nearly Native Nursery", city:"Fayetteville", state:"GA", regions:["ga"], url:"https://nearlynativenursery.com", desc:"Retail native plant nursery specializing in SE native species for wildlife habitat.", tags:["retail"] },
+    { name:"Flat Creek Natives", city:"Perry", state:"GA", regions:["ga"], url:"https://flatcreeknatives.com", desc:"Georgia native plants for restoration and landscaping. Retail and wholesale.", tags:["retail","wholesale"] },
+    { name:"Carolina Native Nursery", city:"Burnsville", state:"NC", regions:["ga"], url:"https://carolinanativenursery.com", desc:"Largest native azalea producer in the US. Broad selection of SE native plants.", tags:["retail","wholesale"] },
+    { name:"NC Native Plant Society", city:"Statewide", state:"NC", regions:["ga"], url:"https://ncwildflower.org/native-plant-nurseries", desc:"Curated list of NC native plant nurseries. All sell nursery-propagated plants only.", tags:["resource","directory"] },
+    // ── South Carolina ──
+    { name:"SC Native Plant Society", city:"Statewide", state:"SC", regions:["sc","ga"], url:"https://scnps.org", desc:"Hosts native plant sales statewide and maintains a nursery directory for SC and border GA regions.", tags:["resource","events"] },
+    { name:"Carolina Wild", city:"Anderson", state:"SC", regions:["sc","ga"], url:"https://carolinawild.com", desc:"South Carolina native plants for home gardens and habitat restoration.", tags:["retail"] },
+    // ── Tennessee & Alabama ──
+    { name:"Tennessee Naturescapes", city:"Tennessee", state:"TN", regions:["tn"], url:"https://tennesseenaturescapes.com", desc:"Native trees, shrubs, wildflowers, ferns and grasses. Retail and mail order.", tags:["retail","ships"] },
+    { name:"GroWild Inc.", city:"Fairview", state:"TN", regions:["tn"], url:"https://growildinc.com", desc:"1,000+ native species. One of the leading native plant nurseries in the eastern US. By appointment.", tags:["retail","wholesale"] },
+    { name:"Petals From the Past", city:"Jemison", state:"AL", regions:["tn"], url:"https://petalsfromthepast.com", desc:"Alabama native plants. Retail nursery with excellent regional selection.", tags:["retail"] },
+    // ── Kentucky ──
+    { name:"Roundstone Native Seed", city:"Upton", state:"KY", regions:["ky"], url:"https://roundstoneseed.com", desc:"20+ years growing 300+ native species and 125 seed mixes. Ships nationwide. Strong KY and Eastern US genotypes.", tags:["seed","ships"] },
+    { name:"Kentucky Native Plant Society", city:"Statewide", state:"KY", regions:["ky"], url:"https://knps.org", desc:"Best source for seasonal native plant sales across Kentucky. Maintains nursery directory.", tags:["resource","events"] },
+    { name:"Ancient Roots Native Nursery", city:"Poseyville", state:"IN", regions:["ky","in"], url:"https://ancientrootsnativenursery.com", desc:"Family-owned. Flowers, grasses, vines, shrubs, trees. All true Midwest natives. Open spring–fall; ships.", tags:["retail","ships"] },
+    // ── West Virginia ──
+    { name:"West Virginia Native Plant Society", city:"Statewide", state:"WV", regions:["wv"], url:"https://wvnps.org", desc:"Best resource for WV native plant sources and seasonal plant sales.", tags:["resource","events"] },
+    { name:"Winston Gardens Nursery", city:"Martinsburg", state:"WV", regions:["wv","va","pa"], url:"https://winstongardensnursery.com", desc:"30+ varieties of native trees and shrubs, potted for immediate planting. Eastern Panhandle WV — near VA and MD border.", tags:["retail"] },
+    // ── Virginia, Maryland & DC ──
+    { name:"Earth Sangha Wild Plant Nursery", city:"Springfield", state:"VA", regions:["va"], url:"https://earthsangha.org/nursery", desc:"Unique resource for ecological restoration in the greater Washington DC area. Retail and wholesale.", tags:["retail","wholesale"] },
+    { name:"Chesapeake Natives", city:"Upper Marlboro", state:"MD", regions:["va","pa"], url:"https://chesapeakenatives.com", desc:"Native plants for the Mid-Atlantic region. Retail and wholesale.", tags:["retail","wholesale"] },
+    // ── Pennsylvania & Mid-Atlantic ──
+    { name:"Bowman's Hill Wildflower Preserve Nursery", city:"New Hope", state:"PA", regions:["pa"], url:"https://bhwp.org", desc:"All native plants, many grown from seed on site. Expert staff. No shipping — visit in person.", tags:["retail"] },
+    { name:"North Creek Nurseries", city:"Landenberg", state:"PA", regions:["pa"], url:"https://northcreeknurseries.com", desc:"Wholesale native plant propagation. Eastern US native perennials, grasses, ferns and shrubs.", tags:["wholesale"] },
+    // ── New York & New Jersey ──
+    { name:"Native Plant Center at SUNY", city:"Valhalla", state:"NY", regions:["ny"], url:"https://nativeplantcenter.org", desc:"Native plants of the Northeast. Annual plant sale, expert resources, and regional plant lists.", tags:["retail","resource","events"] },
+    { name:"Pinelands Nursery", city:"Columbus", state:"NJ", regions:["ny"], url:"https://pinelandsnursery.com", desc:"Ships native plants nationwide. Specializes in Mid-Atlantic and Northeast natives.", tags:["wholesale","ships"] },
+    // ── Connecticut & Rhode Island ──
+    { name:"Earth Tones Native Plants", city:"Woodbury", state:"CT", regions:["ct"], url:"https://earthtonesnativeplants.com", desc:"Connecticut native plants. Strong pollinator and woodland plant selection.", tags:["retail"] },
+    // ── Vermont & New England ──
+    { name:"Lynette's Native Plants", city:"Greensboro Bend", state:"VT", regions:["vt"], url:"https://plantnative.org/nd_patova.htm", desc:"Vermont native plant nursery. Retail. Northeastern native species.", tags:["retail"] },
+    { name:"Project Native", city:"Housatonic", state:"MA", regions:["vt"], url:"https://projectnative.org", desc:"Non-profit. 170+ varieties native to W. Massachusetts, E. New York, NW Connecticut, S. Vermont. Ships.", tags:["retail","nonprofit","ships"] },
+    { name:"New England Wild Flower Society", city:"Framingham", state:"MA", regions:["vt"], url:"https://newenglandwild.org", desc:"America's oldest plant conservation org. Plant sales and expert resources.", tags:["retail","resource","events"] },
+    { name:"Burnt Meadow Nursery", city:"Brownfield", state:"ME", regions:["vt"], url:"https://burntmeadow.com", desc:"100% native woody plants native to New England. Wholesale.", tags:["wholesale"] },
+    // ── Ohio ──
+    { name:"Ohio Prairie Nursery", city:"Hiram", state:"OH", regions:["oh"], url:"https://ohioprairie.com", desc:"Native Ohio prairie and woodland plants. Ships within OH and surrounding states.", tags:["retail","ships"] },
+    { name:"Leaves for Wildlife Native Plant Nursery", city:"Sunbury", state:"OH", regions:["oh"], url:"https://leaveswildlife.com", desc:"Midwest native trees, shrubs, perennials, and spring ephemerals. Online shop and plant sales.", tags:["retail","online"] },
+    // ── Michigan ──
+    { name:"Michiganense Natives", city:"Plymouth", state:"MI", regions:["mi"], url:"https://michiganensenatives.com", desc:"Metro Detroit's retail native nursery. 250+ MI species. Pesticide-free.", tags:["retail"] },
+    { name:"Detroit Wildflower Nursery", city:"Farmington Hills", state:"MI", regions:["mi"], url:"https://detroitwildflowers.com", desc:"Organic, pesticide-free wildflowers native to Michigan and the Great Lakes.", tags:["retail"] },
+    { name:"New Leaf Natives", city:"Manchester", state:"MI", regions:["mi"], url:"https://newleafnatives.com", desc:"300+ native species. Mail-order shipping available.", tags:["retail","wholesale","ships"] },
+    { name:"Windy Rock Farm & Nursery", city:"Manchester", state:"MI", regions:["mi"], url:"https://windyrocknursery.com", desc:"Fully retail. 80+ varieties of native perennials and shrubs.", tags:["retail"] },
+    { name:"Michigan Wildflower Farm", city:"Portland", state:"MI", regions:["mi"], url:"https://michiganwildflowerfarm.com", desc:"Michigan genotype natives since 1996. Trees, shrubs, grasses, wildflowers.", tags:["retail","wholesale"] },
+    { name:"Feral Flora", city:"Ann Arbor", state:"MI", regions:["mi"], url:"https://feral-flora.com", desc:"Michigan-native plants from wild-collected seed. Online sales.", tags:["retail","online"] },
+    // ── Indiana ──
+    { name:"Native Plants Unlimited", city:"Indianapolis", state:"IN", regions:["in"], url:"https://nativeplantsunlimitedshop.com", desc:"300+ native species available to central Indiana every year. Spring herbaceous, fall woody, winter bare roots.", tags:["retail"] },
+    { name:"Indiana Native Plant Society — Grow Indiana Natives", city:"Statewide", state:"IN", regions:["in"], url:"https://indiananativeplants.org/landscaping/where-to-buy", desc:"Interactive map of Indiana invasive-free native nurseries statewide. Most comprehensive source for IN buyers.", tags:["resource","directory"] },
+    // ── Illinois ──
+    { name:"Blazing Star Nursery", city:"Woodstock", state:"IL", regions:["il"], url:"https://blazingstar.com", desc:"Illinois native plants for prairies, woodlands, and wetlands. Retail and wholesale.", tags:["retail","wholesale"] },
+    { name:"Illinois Plants Native Nursery Directory", city:"Statewide", state:"IL", regions:["il"], url:"https://illinoisplants.org/native-plant-nurseries", desc:"Comprehensive directory of Illinois native plant nurseries by region.", tags:["resource","directory"] },
+    // ── Wisconsin ──
+    { name:"Johnson's Nursery", city:"Menomonee Falls", state:"WI", regions:["wi"], url:"https://johnsonsnursery.com", desc:"Many natives grown from wild-collected local seed. Wide array of trees, shrubs and perennials.", tags:["retail","wholesale"] },
+    { name:"Two Ferns Native Nursery", city:"Madison", state:"WI", regions:["wi"], url:"https://twofernsnativenursery.com", desc:"Woman-owned. Diverse native perennials. Online shop and pickup.", tags:["retail","online"] },
+    // ── Minnesota ──
+    { name:"Prairie Restorations", city:"Princeton", state:"MN", regions:["mn"], url:"https://prairierestorations.com", desc:"Native plants and seeds for prairies, woodlands, and wetlands. Retail and wholesale.", tags:["retail","wholesale","seed"] },
+    { name:"Landscape Alternatives", city:"Shafer", state:"MN", regions:["mn"], url:"https://landscapealternatives.org", desc:"Minnesota native plants for home gardens and restoration. Retail nursery.", tags:["retail"] },
+    // ── Iowa ──
+    { name:"Iowa Native Plant Society", city:"Statewide", state:"IA", regions:["ia"], url:"https://iowanativeplants.org", desc:"Best resource for Iowa native plant sales and nursery sources. Hosts events statewide.", tags:["resource","events"] },
+    { name:"Native Legacy Tree & Perennial Nursery", city:"Ames", state:"IA", regions:["ia"], url:"https://native-legacy-tree-perennial-nursery.myshopify.com", desc:"100% native. Multiple Iowa locations including Ames, Cedar Rapids, Coralville, Grimes, and Waukon.", tags:["retail"] },
+    { name:"Ion Exchange", city:"Harpers Ferry", state:"IA", regions:["ia"], url:"https://ionxchange.com", desc:"Native plants, seed, and prairie restorations. Iowa genotype stock. Retail and mail order.", tags:["retail","seed","ships"] },
+    // ── Kansas & Missouri ──
+    { name:"Sow Wild Natives", city:"Kansas City", state:"MO", regions:["ks"], url:"https://sowwildnatives.com", desc:"Retail storefront in Kansas City. Native wildflowers and grasses, function and beauty.", tags:["retail"] },
+    { name:"City Roots Nursery", city:"Kansas City", state:"MO", regions:["ks"], url:"https://cityrootsnursery.com", desc:"Native trees, shrubs and perennials of Missouri and Kansas. Two locations in KC metro.", tags:["retail"] },
+    { name:"Vinland Valley Nursery", city:"Baldwin City", state:"KS", regions:["ks"], url:"https://vinlandvalleynursery.com", desc:"280+ native species, organic, pesticide-free. Butterfly gardening specialists.", tags:["retail"] },
+    { name:"Grow Native! Missouri", city:"Statewide", state:"MO", regions:["ks"], url:"https://grownative.org", desc:"Searchable native plant database + seasonal native plant sales across Missouri.", tags:["resource","events"] },
+    // ── Nebraska & Great Plains ──
+    { name:"Nebraska Statewide Arboretum", city:"Lincoln", state:"NE", regions:["ne"], url:"https://plantnebraska.org", desc:"Native trees, shrubs, grasses and perennials adapted to the Great Plains. Online store.", tags:["retail","online"] },
+    { name:"Prairie Plains Resource Institute", city:"Aurora", state:"NE", regions:["ne"], url:"https://prairieplains.org", desc:"Local ecotype seed and plants for prairie restoration. Nebraska and Great Plains focus.", tags:["retail","seed"] },
+    // ── North & South Dakota ──
+    { name:"Prairie Restorations — Ships to Dakotas", city:"Princeton", state:"MN", regions:["nd"], url:"https://prairierestorations.com", desc:"Minnesota-based but ships Great Plains and Upper Midwest genotype plants to ND and SD. Call for regional genotypes.", tags:["retail","ships"] },
+    { name:"North Dakota Native Plant Society", city:"Statewide", state:"ND", regions:["nd"], url:"https://ndnps.org", desc:"Best starting point for finding ND and SD native plant sources and seasonal sales.", tags:["resource","events"] },
+    // ── Alaska ──
+    { name:"Alaska Native Plant Society", city:"Anchorage", state:"AK", regions:["ak"], url:"https://aknps.org", desc:"Best starting point for finding Alaskan native plants. Hosts plant sales and maintains directory of local sources.", tags:["resource","events"] },
+    // ── Virginia (Mid-Atlantic) ──
+    { name:"Izel Native Plants", city:"Online", state:"US", regions:["va"], url:"https://izelplants.com", desc:"Online aggregator of multiple native plant nurseries. Mid-Atlantic and beyond. Ships nationwide.", tags:["retail","online","ships"] },
+    // ── National shippers (always shown) ──
+    { name:"Prairie Moon Nursery", city:"Winona", state:"MN", regions:["national"], url:"https://prairiemoon.com", desc:"Ships nationwide. 600+ native species — seeds, plugs, and plants for every US region.", tags:["ships","seed"] },
+    { name:"American Meadows", city:"Williston", state:"VT", regions:["national"], url:"https://americanmeadows.com", desc:"Ships nationwide. Native wildflower seeds and plants for every US climate zone.", tags:["ships","seed"] },
+    { name:"PlantNative.org Directory", city:"National", state:"US", regions:["national"], url:"https://plantnative.org/national_nursery_dir_main.htm", desc:"871+ native plant nurseries searchable by state. The most comprehensive national directory.", tags:["resource","directory"] },
+    { name:"Prairie Nursery", city:"Westfield", state:"WI", regions:["national"], url:"https://prairienursery.com", desc:"Ships nationwide. High-quality native plants and seeds for prairies, woodlands, and wetlands.", tags:["ships","seed"] },
+    { name:"Wild Ones Native Plant Nursery Finder", city:"National", state:"US", regions:["national"], url:"https://nativegardendesigns.wildones.org/nursery-list", desc:"State-by-state directory of nurseries endorsed by Wild Ones as trustworthy native plant sources.", tags:["resource","directory"] },
+    { name:"Garden for Wildlife", city:"National", state:"US", regions:["national"], url:"https://gardenforwildlife.com", desc:"Ships native plants to all 50 states organized by state — enter your state for region-specific species.", tags:["ships","online"] },
     ];
+
+    // ─── REGION FUNCTIONS ─────────────────────────────────────────────────────
+
     function getRegion(zip) {
         var z = parseInt(zip) || 0;
-        if (!z)
-            return 'national';
-        if (z >= 97000 && z <= 97299)
-            return 'or-portland';
-        if (z >= 97300 && z <= 97499)
-            return 'or-willamette';
-        if (z === 97031 || z === 97014 || z === 97041)
-            return 'or-gorge';
-        if (z >= 98000 && z <= 98999)
-            return 'wa';
-        if (z >= 94000 && z <= 94799)
-            return 'ca-bay';
-        if ((z >= 94800 && z <= 94999) || (z >= 95400 && z <= 95499))
-            return 'ca-sonoma';
-        if (z >= 85000 && z <= 86999)
-            return 'az';
-        if (z >= 48000 && z <= 49999)
-            return 'mi';
-        if ((z >= 5000 && z <= 5999) || (z >= 1000 && z <= 3999))
-            return 'vt';
-        if (z >= 96700 && z <= 96899)
-            return 'hi';
-        if (z >= 75000 && z <= 79999)
-            return 'tx';
-        if (z >= 80000 && z <= 81999)
-            return 'co';
-        if (z >= 32000 && z <= 34999)
-            return 'fl';
-        if ((z >= 30000 && z <= 31999) || (z >= 27000 && z <= 28999))
-            return 'ga';
-        if ((z >= 60000 && z <= 62999))
-            return 'il';
-        if ((z >= 63000 && z <= 65999) || (z >= 66000 && z <= 67999))
-            return 'ks';
-        if ((z >= 55000 && z <= 56999))
-            return 'mn';
-        if ((z >= 43000 && z <= 45999))
-            return 'oh';
-        if ((z >= 15000 && z <= 19999) || (z >= 20000 && z <= 21999))
-            return 'pa';
-        if ((z >= 10000 && z <= 14999) || (z >= 7000 && z <= 8999))
-            return 'ny';
-        if ((z >= 37000 && z <= 38999) || (z >= 35000 && z <= 36999) || (z >= 29000 && z <= 29999))
-            return 'tn';
-        if (z >= 84000 && z <= 84999)
-            return 'ut';
-        if ((z >= 59000 && z <= 59999) || (z >= 83000 && z <= 83999))
-            return 'mt';
-        if (z >= 87000 && z <= 88999)
-            return 'nm';
-        if (z >= 68000 && z <= 69999)
-            return 'ne';
-        if (z >= 53000 && z <= 54999)
-            return 'wi';
-        if (z >= 6000 && z <= 6999)
-            return 'ct';
-        if (z >= 22000 && z <= 24999)
-            return 'va';
+        if (!z) return 'national';
+        // Oregon
+        if (z >= 97000 && z <= 97299) return 'or-portland';
+        if (z === 97031 || z === 97014 || z === 97041) return 'or-gorge';
+        if (z >= 97300 && z <= 97499) return 'or-willamette';
+        if (z >= 97500 && z <= 97999) return 'or-southern';
+        // Washington
+        if (z >= 98000 && z <= 98999) return 'wa';
+        // California
+        if (z >= 94000 && z <= 94799) return 'ca-bay';
+        if ((z >= 94800 && z <= 94999) || (z >= 95400 && z <= 95499)) return 'ca-sonoma';
+        if ((z >= 95000 && z <= 95399) || (z >= 95500 && z <= 95999)) return 'ca-sacramento';
+        if ((z >= 90000 && z <= 93999) || (z >= 96000 && z <= 96199)) return 'ca-socal';
+        // Nevada — split by region; fix NM/NV boundary bug (old code had 87000-88999 for NM, bleeding into NV)
+        // Vegas/Southern NV: 88900-88999 (Henderson area) + 89000-89199 + 89300-89399
+        // Reno/Northern NV: 89200-89299 (Reno suburbs) + 89400-89999 (Reno, Carson City, Elko)
+        if ((z >= 88900 && z <= 88999) || (z >= 89000 && z <= 89199) || (z >= 89300 && z <= 89399)) return 'nv-vegas';
+        if ((z >= 89200 && z <= 89299) || (z >= 89400 && z <= 89999)) return 'nv-reno';
+        // Arizona
+        if (z >= 85000 && z <= 86999) return 'az';
+        // New Mexico — corrected upper bound to 88499 (was 88999, overlapping NV)
+        if (z >= 87000 && z <= 88499) return 'nm';
+        // Utah
+        if (z >= 84000 && z <= 84999) return 'ut';
+        // Colorado
+        if (z >= 80000 && z <= 81999) return 'co';
+        // Wyoming
+        if (z >= 82000 && z <= 83199) return 'wy';
+        // Montana & Idaho
+        if ((z >= 59000 && z <= 59999) || (z >= 83200 && z <= 83999)) return 'mt';
+        // Hawaii
+        if (z >= 96700 && z <= 96899) return 'hi';
+        // Alaska
+        if (z >= 99500 && z <= 99999) return 'ak';
+        // Texas
+        if (z >= 75000 && z <= 79999) return 'tx';
+        // Oklahoma
+        if (z >= 73000 && z <= 74999) return 'ok';
+        // Arkansas
+        if (z >= 71600 && z <= 72999) return 'ar';
+        // Louisiana
+        if (z >= 70000 && z <= 71499) return 'la';
+        // Mississippi
+        if (z >= 38600 && z <= 39799) return 'ms';
+        // Florida
+        if (z >= 32000 && z <= 34999) return 'fl';
+        // Georgia & North Carolina
+        if ((z >= 30000 && z <= 31999) || (z >= 27000 && z <= 28999)) return 'ga';
+        // South Carolina
+        if (z >= 29000 && z <= 29999) return 'sc';
+        // Tennessee & Alabama
+        if ((z >= 37000 && z <= 38599) || (z >= 35000 && z <= 36999)) return 'tn';
+        // Kentucky
+        if (z >= 40000 && z <= 42799) return 'ky';
+        // West Virginia
+        if (z >= 24700 && z <= 26899) return 'wv';
+        // Virginia & DC
+        if ((z >= 22000 && z <= 24699) || (z >= 20000 && z <= 20599)) return 'va';
+        // Maryland & Delaware (shown with PA nurseries — geographically appropriate)
+        if ((z >= 20600 && z <= 21999) || (z >= 19700 && z <= 19999)) return 'pa';
+        // Pennsylvania
+        if (z >= 15000 && z <= 19699) return 'pa';
+        // New York & New Jersey
+        if ((z >= 10000 && z <= 14999) || (z >= 7000 && z <= 8999)) return 'ny';
+        // Connecticut & Rhode Island
+        if ((z >= 6000 && z <= 6999) || (z >= 2800 && z <= 2999)) return 'ct';
+        // Vermont, NH, ME, MA — all New England
+        if (z >= 1000 && z <= 5999) return 'vt';
+        // Ohio
+        if (z >= 43000 && z <= 45999) return 'oh';
+        // Michigan
+        if (z >= 48000 && z <= 49999) return 'mi';
+        // Indiana
+        if (z >= 46000 && z <= 47999) return 'in';
+        // Illinois
+        if (z >= 60000 && z <= 62999) return 'il';
+        // Wisconsin
+        if (z >= 53000 && z <= 54999) return 'wi';
+        // Minnesota
+        if (z >= 55000 && z <= 56999) return 'mn';
+        // Iowa
+        if (z >= 50000 && z <= 52999) return 'ia';
+        // Missouri & Kansas
+        if ((z >= 63000 && z <= 65999) || (z >= 66000 && z <= 67999)) return 'ks';
+        // Nebraska
+        if (z >= 68000 && z <= 69999) return 'ne';
+        // North & South Dakota
+        if ((z >= 57000 && z <= 57999) || (z >= 58000 && z <= 58999)) return 'nd';
         return 'national';
     }
+
     function getRegionLabel(r) {
         var m = {
             'or-portland': 'Oregon — Portland metro & Willamette Valley',
             'or-willamette': 'Oregon — Willamette Valley',
             'or-gorge': 'Oregon — Columbia Gorge',
+            'or-southern': 'Oregon — Southern & Eastern Oregon',
             'wa': 'Washington',
             'ca-bay': 'California — Bay Area',
             'ca-sonoma': 'California — Sonoma / North Bay',
+            'ca-sacramento': 'California — Sacramento Valley & Sierra Foothills',
+            'ca-socal': 'California — Southern California',
+            'nv-reno': 'Nevada — Reno / Northern Nevada & Great Basin',
+            'nv-vegas': 'Nevada — Las Vegas / Mojave Desert',
             'az': 'Arizona',
-            'mi': 'Michigan',
-            'vt': 'Vermont & New England',
+            'nm': 'New Mexico & Southwest',
+            'ut': 'Utah',
+            'co': 'Colorado',
+            'wy': 'Wyoming',
+            'mt': 'Montana & Idaho',
             'hi': 'Hawaii',
+            'ak': 'Alaska',
             'tx': 'Texas',
-            'co': 'Colorado & Mountain West',
+            'ok': 'Oklahoma',
+            'ar': 'Arkansas',
+            'la': 'Louisiana',
+            'ms': 'Mississippi',
             'fl': 'Florida',
-            'ga': 'Georgia & Carolinas',
-            'il': 'Illinois & Great Lakes',
-            'ks': 'Kansas & Missouri',
-            'mn': 'Minnesota & Upper Midwest',
-            'oh': 'Ohio',
+            'ga': 'Georgia & North Carolina',
+            'sc': 'South Carolina',
+            'tn': 'Tennessee & Alabama',
+            'ky': 'Kentucky',
+            'wv': 'West Virginia',
+            'va': 'Virginia, Maryland & DC',
             'pa': 'Pennsylvania & Mid-Atlantic',
             'ny': 'New York & New Jersey',
-            'tn': 'Tennessee, Alabama & South Carolina',
-            'ut': 'Utah & Mountain West',
-            'mt': 'Montana & Idaho',
-            'nm': 'New Mexico & Southwest',
-            'ne': 'Nebraska & Great Plains',
-            'wi': 'Wisconsin',
             'ct': 'Connecticut & Rhode Island',
-            'va': 'Virginia, Maryland & DC',
+            'vt': 'Vermont & New England',
+            'oh': 'Ohio',
+            'mi': 'Michigan',
+            'in': 'Indiana',
+            'il': 'Illinois',
+            'wi': 'Wisconsin',
+            'mn': 'Minnesota',
+            'ia': 'Iowa',
+            'ks': 'Kansas & Missouri',
+            'ne': 'Nebraska & Great Plains',
+            'nd': 'North & South Dakota',
             'national': 'National resources'
         };
         return m[r] || 'Your region';
     }
+
+    // renderNurseries now matches on `regions` array (plural) per nursery entry
     function renderNurseries(filter) {
         var region = getRegion(currentZip);
         var local = NURSERIES.filter(function(n) {
-            return n.region === region;
+            return n.regions.indexOf(region) !== -1;
         });
         var national = NURSERIES.filter(function(n) {
-            return n.region === 'national';
+            return n.regions.indexOf('national') !== -1;
         });
         var showLocal = filter && filter !== 'all' ? local.filter(function(n) {
-            return n.tags.includes(filter);
+            return n.tags.indexOf(filter) !== -1;
         }) : local;
         var showNat = filter && filter !== 'all' ? national.filter(function(n) {
-            return n.tags.includes(filter);
+            return n.tags.indexOf(filter) !== -1;
         }) : national;
         document.getElementById('r-nurseries').textContent = local.length || '—';
         document.getElementById('nursery-label').textContent = local.length ? 'Local nurseries' : 'Ships nationwide';
-        document.getElementById('r-nursery-sub').textContent = local.length ? local.length + ' local nurseries near zip ' + currentZip + ' — all carry native plants for your region' : 'No local nurseries in our database yet for this region — national mail-order options below ship anywhere in the US';
+        document.getElementById('r-nursery-sub').textContent = local.length
+            ? local.length + ' local nurseries near zip ' + currentZip + ' — all carry native plants for your region'
+            : 'No local nurseries in our database yet for this region — national mail-order options below ship anywhere in the US';
         var html = '';
         if (showLocal.length) {
             html += '<div class="region-label">📍 ' + getRegionLabel(region) + '</div>';
             html += showLocal.map(renderRow).join('');
         }
         if (showNat.length) {
-            html += '<div class="region-label" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + '">🚚 Ships nationwide</div>';
+            html += '<div class="region-label" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + '">🚚 Ships nationwide — delivered to your door</div>';
             html += showNat.map(renderRow).join('');
         }
-        if (!html)
-            html = '<p style="font-size:13px;color:#aaa;">No results — try "All".</p>';
+        if (!html) html = '<p style="font-size:13px;color:#aaa;">No results — try "All".</p>';
         document.getElementById('nursery-list').innerHTML = html;
     }
+
     function renderRow(n) {
         var tags = n.tags.slice(0, 3).map(function(t) {
-            var cls = t === 'wholesale' ? 'wholesale' : t === 'ships' ? 'ships' : t === 'seed' ? 'seed' : t === 'resource' || t === 'directory' ? 'resource' : '';
+            var cls = t === 'wholesale' ? 'wholesale' : t === 'ships' ? 'ships' : t === 'seed' ? 'seed' : (t === 'resource' || t === 'directory') ? 'resource' : '';
             return '<span class="ntag ' + cls + '">' + t + '</span>';
         }).join('');
         return '<div class="nursery-row"><div><div class="nursery-name">' + n.name + '</div><div class="nursery-desc">' + n.city + ', ' + n.state + ' — ' + n.desc + '</div><div class="nursery-tags">' + tags + '</div></div><a class="nursery-link" href="' + n.url + '" target="_blank">Visit →</a></div>';
     }
+
     function buildFilters() {
         var bar = document.getElementById('filter-bar');
-        var filters = [['all', 'All'], ['retail', 'Retail'], ['wholesale', 'Wholesale'], ['ships', 'Ships nationwide'], ['seed', 'Seed only']];
+        var filters = [['all','All'],['retail','Retail'],['wholesale','Wholesale'],['ships','Ships nationwide'],['seed','Seed only']];
         bar.innerHTML = filters.map(function(f) {
             return '<button class="fchip' + (f[0] === 'all' ? ' on' : '') + '" onclick="setFilter(this,\'' + f[0] + '\')">' + f[1] + '</button>';
         }).join('');
     }
+
     function setFilter(el, f) {
-        document.querySelectorAll('.fchip').forEach(function(c) {
-            c.classList.remove('on');
-        });
+        document.querySelectorAll('.fchip').forEach(function(c) { c.classList.remove('on'); });
         el.classList.add('on');
         renderNurseries(f);
     }
+
     function goTo(n) {
-        document.querySelectorAll('.screen').forEach(function(s) {
-            s.classList.remove('active');
-        });
+        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
         document.getElementById('s' + n).classList.add('active');
-        ['sn0', 'sn1', 'sn2'].forEach(function(id, i) {
+        ['sn0','sn1','sn2'].forEach(function(id, i) {
             var el = document.getElementById(id);
             var lel = document.getElementById('sl' + i);
-            el.classList.remove('active', 'done');
+            el.classList.remove('active','done');
             lel.classList.remove('active');
-            if (i < n) {
-                el.classList.add('done');
-                el.textContent = '✓';
-            }
-            else if (i === n) {
-                el.classList.add('active');
-                el.textContent = i + 1;
-                lel.classList.add('active');
-            }
-            else {
-                el.textContent = i + 1;
-            }
+            if (i < n) { el.classList.add('done'); el.textContent = '✓'; }
+            else if (i === n) { el.classList.add('active'); el.textContent = i + 1; lel.classList.add('active'); }
+            else { el.textContent = i + 1; }
         });
-        window.scrollTo({
-            top: document.querySelector('.app-wrap').offsetTop - 20,
-            behavior: 'smooth'
-        });
+        window.scrollTo({ top: document.querySelector('.app-wrap').offsetTop - 20, behavior: 'smooth' });
     }
+
     function handleFile(e) {
         var f = e.target.files[0];
-        if (f)
-            loadPhoto(f);
+        if (f) loadPhoto(f);
     }
+
     function loadPhoto(f) {
         var reader = new FileReader();
         reader.onload = function(ev) {
@@ -2380,17 +1764,11 @@
                 var maxDim = 1200;
                 var w = img.width, h = img.height;
                 if (w > maxDim || h > maxDim) {
-                    if (w > h) {
-                        h = Math.round(h * (maxDim / w));
-                        w = maxDim;
-                    } else {
-                        w = Math.round(w * (maxDim / h));
-                        h = maxDim;
-                    }
+                    if (w > h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+                    else { w = Math.round(w * (maxDim / h)); h = maxDim; }
                 }
                 var canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
+                canvas.width = w; canvas.height = h;
                 var ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
                 var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
@@ -2409,232 +1787,130 @@
         };
         reader.readAsDataURL(f);
     }
+
     function clearPhoto() {
-        imgData = null;
-        imgType = null;
+        imgData = null; imgType = null;
         var fi = document.getElementById('file-input');
-        if (fi)
-            fi.value = '';
+        if (fi) fi.value = '';
         document.getElementById('preview-img').src = '';
         document.getElementById('upload-area').style.display = 'block';
         document.getElementById('preview-wrap').style.display = 'none';
         document.getElementById('photo-mismatch-notice').style.display = 'none';
     }
+
     function getGoals() {
         var g = [];
-        document.querySelectorAll('.goal-card.sel .goal-name').forEach(function(x) {
-            g.push(x.textContent);
-        });
+        document.querySelectorAll('.goal-card.sel .goal-name').forEach(function(x) { g.push(x.textContent); });
         return g.length ? g.join(', ') : 'general native landscaping';
     }
+
     function drawLayout(plants, size) {
         var svg = document.getElementById('layout-svg');
         var legend = document.getElementById('layout-legend');
-        svg.innerHTML = '';
-        legend.innerHTML = '';
-        var dims = {
-            tiny: {
-                w: 280,
-                h: 220
-            },
-            small: {
-                w: 420,
-                h: 300
-            },
-            medium: {
-                w: 560,
-                h: 360
-            },
-            large: {
-                w: 600,
-                h: 380
-            }
-        };
+        svg.innerHTML = ''; legend.innerHTML = '';
+        var dims = { tiny:{w:280,h:220}, small:{w:420,h:300}, medium:{w:560,h:360}, large:{w:600,h:380} };
         var d = dims[size] || dims.small;
-        var vw = 600,
-            vh = 400;
-        var ox = (vw - d.w) / 2,
-            oy = (vh - d.h) / 2;
-        var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        bg.setAttribute('width', vw);
-        bg.setAttribute('height', vh);
-        bg.setAttribute('fill', '#f0f4f0');
+        var vw = 600, vh = 400;
+        var ox = (vw - d.w) / 2, oy = (vh - d.h) / 2;
+        var bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        bg.setAttribute('width', vw); bg.setAttribute('height', vh); bg.setAttribute('fill','#f0f4f0');
         svg.appendChild(bg);
-        var yard = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        yard.setAttribute('x', ox);
-        yard.setAttribute('y', oy);
-        yard.setAttribute('width', d.w);
-        yard.setAttribute('height', d.h);
-        yard.setAttribute('fill', '#e8f0e0');
-        yard.setAttribute('stroke', '#2d6a1f');
-        yard.setAttribute('stroke-width', '2');
-        yard.setAttribute('rx', '4');
+        var yard = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        yard.setAttribute('x',ox); yard.setAttribute('y',oy); yard.setAttribute('width',d.w); yard.setAttribute('height',d.h);
+        yard.setAttribute('fill','#e8f0e0'); yard.setAttribute('stroke','#2d6a1f'); yard.setAttribute('stroke-width','2'); yard.setAttribute('rx','4');
         svg.appendChild(yard);
-        var house = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        house.setAttribute('x', ox + d.w * 0.3);
-        house.setAttribute('y', oy + d.h * 0.7);
-        house.setAttribute('width', d.w * 0.4);
-        house.setAttribute('height', d.h * 0.35);
-        house.setAttribute('fill', '#d4cfc8');
-        house.setAttribute('stroke', '#aaa');
-        house.setAttribute('stroke-width', '1');
-        house.setAttribute('rx', '2');
+        var house = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        house.setAttribute('x',ox+d.w*0.3); house.setAttribute('y',oy+d.h*0.7); house.setAttribute('width',d.w*0.4); house.setAttribute('height',d.h*0.35);
+        house.setAttribute('fill','#d4cfc8'); house.setAttribute('stroke','#aaa'); house.setAttribute('stroke-width','1'); house.setAttribute('rx','2');
         svg.appendChild(house);
-        var houseLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        houseLabel.setAttribute('x', ox + d.w * 0.5);
-        houseLabel.setAttribute('y', oy + d.h * 0.875);
-        houseLabel.setAttribute('text-anchor', 'middle');
-        houseLabel.setAttribute('font-size', '11');
-        houseLabel.setAttribute('fill', '#888');
-        houseLabel.setAttribute('font-family', 'DM Sans, sans-serif');
-        houseLabel.textContent = 'House';
-        svg.appendChild(houseLabel);
-        var sunG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        sunG.setAttribute('transform', 'translate(' + (ox + d.w - 30) + ',' + (oy + 20) + ')');
-        var sunC = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        sunC.setAttribute('cx', '0');
-        sunC.setAttribute('cy', '0');
-        sunC.setAttribute('r', '10');
-        sunC.setAttribute('fill', '#f5c842');
+        var houseLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
+        houseLabel.setAttribute('x',ox+d.w*0.5); houseLabel.setAttribute('y',oy+d.h*0.875); houseLabel.setAttribute('text-anchor','middle');
+        houseLabel.setAttribute('font-size','11'); houseLabel.setAttribute('fill','#888'); houseLabel.setAttribute('font-family','DM Sans, sans-serif');
+        houseLabel.textContent = 'House'; svg.appendChild(houseLabel);
+        var sunG = document.createElementNS('http://www.w3.org/2000/svg','g');
+        sunG.setAttribute('transform','translate('+(ox+d.w-30)+','+(oy+20)+')');
+        var sunC = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        sunC.setAttribute('cx','0'); sunC.setAttribute('cy','0'); sunC.setAttribute('r','10'); sunC.setAttribute('fill','#f5c842');
         sunG.appendChild(sunC);
-        var sunT = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        sunT.setAttribute('x', '0');
-        sunT.setAttribute('y', '24');
-        sunT.setAttribute('text-anchor', 'middle');
-        sunT.setAttribute('font-size', '9');
-        sunT.setAttribute('fill', '#999');
-        sunT.setAttribute('font-family', 'DM Sans, sans-serif');
-        sunT.textContent = 'S';
-        sunG.appendChild(sunT);
-        svg.appendChild(sunG);
-        var northT = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        northT.setAttribute('x', ox + 12);
-        northT.setAttribute('y', oy + 20);
-        northT.setAttribute('font-size', '11');
-        northT.setAttribute('fill', '#666');
-        northT.setAttribute('font-family', 'DM Sans, sans-serif');
-        northT.setAttribute('font-weight', '500');
-        northT.textContent = 'N↑';
-        svg.appendChild(northT);
-        var sizeLabels = {
-            tiny: 'Under 500 sq ft',
-            small: '500–1,500 sq ft',
-            medium: '1,500–5,000 sq ft',
-            large: '5,000+ sq ft'
-        };
-        var yardLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        yardLabel.setAttribute('x', ox + 8);
-        yardLabel.setAttribute('y', oy + d.h - 8);
-        yardLabel.setAttribute('font-size', '9');
-        yardLabel.setAttribute('fill', '#999');
-        yardLabel.setAttribute('font-family', 'DM Sans, sans-serif');
-        yardLabel.textContent = sizeLabels[size] || '';
-        svg.appendChild(yardLabel);
+        var sunT = document.createElementNS('http://www.w3.org/2000/svg','text');
+        sunT.setAttribute('x','0'); sunT.setAttribute('y','24'); sunT.setAttribute('text-anchor','middle');
+        sunT.setAttribute('font-size','9'); sunT.setAttribute('fill','#999'); sunT.setAttribute('font-family','DM Sans, sans-serif');
+        sunT.textContent = 'S'; sunG.appendChild(sunT); svg.appendChild(sunG);
+        var northT = document.createElementNS('http://www.w3.org/2000/svg','text');
+        northT.setAttribute('x',ox+12); northT.setAttribute('y',oy+20); northT.setAttribute('font-size','11');
+        northT.setAttribute('fill','#666'); northT.setAttribute('font-family','DM Sans, sans-serif'); northT.setAttribute('font-weight','500');
+        northT.textContent = 'N↑'; svg.appendChild(northT);
+        var sizeLabels = { tiny:'Under 500 sq ft', small:'500–1,500 sq ft', medium:'1,500–5,000 sq ft', large:'5,000+ sq ft' };
+        var yardLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
+        yardLabel.setAttribute('x',ox+8); yardLabel.setAttribute('y',oy+d.h-8); yardLabel.setAttribute('font-size','9');
+        yardLabel.setAttribute('fill','#999'); yardLabel.setAttribute('font-family','DM Sans, sans-serif');
+        yardLabel.textContent = sizeLabels[size] || ''; svg.appendChild(yardLabel);
         var zones = [];
         var plantableH = d.h * 0.65;
         var cols = Math.ceil(Math.sqrt(plants.length));
         var rows = Math.ceil(plants.length / cols);
-        var cellW = d.w / cols;
-        var cellH = plantableH / rows;
+        var cellW = d.w / cols, cellH = plantableH / rows;
         plants.forEach(function(p, i) {
-            var col = i % cols;
-            var row = Math.floor(i / cols);
+            var col = i % cols, row = Math.floor(i / cols);
             var cx = ox + col * cellW + cellW / 2 + (Math.random() - 0.5) * cellW * 0.3;
             var cy = oy + row * cellH + cellH / 2 + (Math.random() - 0.5) * cellH * 0.25;
             cx = Math.max(ox + p.r + 4, Math.min(ox + d.w - p.r - 4, cx));
             cy = Math.max(oy + p.r + 4, Math.min(oy + plantableH - p.r - 4, cy));
-            zones.push({
-                x: cx,
-                y: cy,
-                p: p
-            });
+            zones.push({ x: cx, y: cy, p: p });
         });
         zones.forEach(function(z, i) {
-            var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            var shadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-            shadow.setAttribute('cx', z.x + 3);
-            shadow.setAttribute('cy', z.y + z.p.r * 0.6 + 3);
-            shadow.setAttribute('rx', z.p.r * 0.9);
-            shadow.setAttribute('ry', z.p.r * 0.35);
-            shadow.setAttribute('fill', 'rgba(0,0,0,0.08)');
+            var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+            var shadow = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+            shadow.setAttribute('cx',z.x+3); shadow.setAttribute('cy',z.y+z.p.r*0.6+3);
+            shadow.setAttribute('rx',z.p.r*0.9); shadow.setAttribute('ry',z.p.r*0.35); shadow.setAttribute('fill','rgba(0,0,0,0.08)');
             g.appendChild(shadow);
-            var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', z.x);
-            circle.setAttribute('cy', z.y);
-            circle.setAttribute('r', z.p.r);
-            circle.setAttribute('fill', z.p.color);
-            circle.setAttribute('opacity', '0.85');
+            var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+            circle.setAttribute('cx',z.x); circle.setAttribute('cy',z.y); circle.setAttribute('r',z.p.r);
+            circle.setAttribute('fill',z.p.color); circle.setAttribute('opacity','0.85');
             g.appendChild(circle);
             for (var di = 0; di < 3; di++) {
-                var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                var dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
                 var angle = di * (Math.PI * 2 / 3);
-                dot.setAttribute('cx', z.x + Math.cos(angle) * z.p.r * 0.4);
-                dot.setAttribute('cy', z.y + Math.sin(angle) * z.p.r * 0.4);
-                dot.setAttribute('r', z.p.r * 0.18);
-                dot.setAttribute('fill', 'rgba(255,255,255,0.25)');
+                dot.setAttribute('cx',z.x+Math.cos(angle)*z.p.r*0.4); dot.setAttribute('cy',z.y+Math.sin(angle)*z.p.r*0.4);
+                dot.setAttribute('r',z.p.r*0.18); dot.setAttribute('fill','rgba(255,255,255,0.25)');
                 g.appendChild(dot);
             }
-            var num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            num.setAttribute('x', z.x);
-            num.setAttribute('y', z.y + 4);
-            num.setAttribute('text-anchor', 'middle');
-            num.setAttribute('font-size', Math.max(9, z.p.r * 0.55));
-            num.setAttribute('fill', 'white');
-            num.setAttribute('font-weight', '600');
-            num.setAttribute('font-family', 'DM Sans, sans-serif');
-            num.textContent = i + 1;
-            g.appendChild(num);
-            svg.appendChild(g);
+            var num = document.createElementNS('http://www.w3.org/2000/svg','text');
+            num.setAttribute('x',z.x); num.setAttribute('y',z.y+4); num.setAttribute('text-anchor','middle');
+            num.setAttribute('font-size',Math.max(9,z.p.r*0.55)); num.setAttribute('fill','white');
+            num.setAttribute('font-weight','600'); num.setAttribute('font-family','DM Sans, sans-serif');
+            num.textContent = i + 1; g.appendChild(num); svg.appendChild(g);
             var li = document.createElement('div');
             li.className = 'legend-item';
-            li.innerHTML = '<div class="legend-dot" style="background:' + z.p.color + '"></div><span>' +
-            (i + 1) + '. ' + z.p.name + '</span>';
+            li.innerHTML = '<div class="legend-dot" style="background:' + z.p.color + '"></div><span>' + (i+1) + '. ' + z.p.name + '</span>';
             legend.appendChild(li);
         });
     }
+
     function parsePlants(text) {
-        var lines = text.split('\n').filter(function(l) {
-            return l.trim().startsWith('-');
-        });
+        var lines = text.split('\n').filter(function(l) { return l.trim().startsWith('-'); });
         var typeMap = {
-            shrub: ['shrub', 'currant', 'elderberry', 'spiraea', 'spirea', 'hazel', 'oceanspray', 'rose', 'dogwood', 'serviceberry', 'manzanita', 'toyon', 'coffeeberry', 'buckwheat', 'sage', 'salvia', 'brittlebush', 'palo verde', 'mesquite', 'ocotillo', 'ironwood'],
-            tree: ['tree', 'oak', 'maple', 'alder', 'willow', 'fir', 'pine', 'cedar', 'spruce', 'hemlock', 'ash', 'cottonwood', 'koa', 'loulu'],
-            grass: ['grass', 'sedge', 'rush', 'bunchgrass', 'rye', 'fescue', 'muhly', 'grama', 'muhly'],
-            bulb: ['bulb', 'camas', 'lily', 'trillium', 'fritillary', 'brodiaea', 'blue-eyed'],
-            groundcover: ['groundcover', 'fern', 'yarrow', 'ginger', 'foam', 'creeping', 'mat', 'low', 'carpet', 'clover', 'strawberry']
+            shrub: ['shrub','currant','elderberry','spiraea','spirea','hazel','oceanspray','rose','dogwood','serviceberry','manzanita','toyon','coffeeberry','buckwheat','sage','salvia','brittlebush','palo verde','mesquite','ocotillo','ironwood'],
+            tree: ['tree','oak','maple','alder','willow','fir','pine','cedar','spruce','hemlock','ash','cottonwood','koa','loulu'],
+            grass: ['grass','sedge','rush','bunchgrass','rye','fescue','muhly','grama'],
+            bulb: ['bulb','camas','lily','trillium','fritillary','brodiaea','blue-eyed'],
+            groundcover: ['groundcover','fern','yarrow','ginger','foam','creeping','mat','low','carpet','clover','strawberry']
         };
         return lines.slice(0, 7).map(function(line, i) {
-            var name = line.replace(/^-\s*/, '').split('(')[0].split('—')[0].trim();
+            var name = line.replace(/^-\s*/,'').split('(')[0].split('—')[0].trim();
             var nameLow = name.toLowerCase();
             var type = 'perennial';
             Object.keys(typeMap).forEach(function(t) {
-                if (typeMap[t].some(function(kw) {
-                    return nameLow.includes(kw);
-                }))
-                    type = t;
+                if (typeMap[t].some(function(kw) { return nameLow.includes(kw); })) type = t;
             });
-            var sizes = {
-                shrub: 26,
-                tree: 34,
-                grass: 16,
-                bulb: 11,
-                groundcover: 13,
-                perennial: 19
-            };
-            return {
-                name: name.substring(0, 22),
-                color: PLANT_COLORS[i % PLANT_COLORS.length],
-                r: sizes[type],
-                type: type
-            };
+            var sizes = { shrub:26, tree:34, grass:16, bulb:11, groundcover:13, perennial:19 };
+            return { name: name.substring(0, 22), color: PLANT_COLORS[i % PLANT_COLORS.length], r: sizes[type], type: type };
         });
     }
+
     async function runAnalysis() {
         var zip = document.getElementById('zip').value.trim();
-        if (!zip) {
-            alert('Please enter your zip code.');
-            return;
-        }
+        if (!zip) { alert('Please enter your zip code.'); return; }
         currentZip = zip;
         var sizeVal = document.getElementById('yard-size').value || 'small';
         yardSize = sizeVal;
@@ -2642,15 +1918,13 @@
         var sun = document.getElementById('sun').value || 'mixed sun';
         var goals = getGoals();
         goTo(2);
-        [0, 1, 2, 3, 4].forEach(function(i) {
+        [0,1,2,3,4].forEach(function(i) {
             setTimeout(function() {
                 var el = document.getElementById('as' + i);
-                if (el)
-                    el.classList.add('on');
+                if (el) el.classList.add('on');
             }, i * 900);
         });
-        var realCity = '',
-            realState = '';
+        var realCity = '', realState = '';
         try {
             var geoResp = await fetch('https://api.zippopotam.us/us/' + zip);
             if (geoResp.ok) {
@@ -2666,35 +1940,15 @@
         var locationLine = realCity ? ('- Actual city/town for this zip code (confirmed, use this exact name): ' + realCity + ', ' + realState + '\n') : '';
         var photoCheckInstruction = imgData ? '\n\nIMPORTANT: First check whether the uploaded photo actually shows an outdoor yard, garden, or landscaping area. If it does NOT (for example, it shows a person, a pet, an indoor room, a patio with no plantable ground, an unrelated object, etc.), respond with ONLY this exact line and nothing else:\nPHOTO_MISMATCH: [one short, friendly sentence explaining what you see instead and asking for a photo of their yard]\n\nIf the photo DOES show a yard or outdoor planting area, ignore this instruction and proceed normally with the full response format below.' : '';
         var prompt = 'You are SmartScape, an expert in native plants and climate-resilient landscaping for all US regions.\n\nSite details:\n- Zip code: ' + zip + '\n' + locationLine + '- Yard size: ' + sizeLabel + '\n- Sun exposure: ' + sun + '\n- Goals: ' + goals + '\n' + (imgData ? '- A photo of the site has been uploaded and included.\n' : '') + '\nAll plant recommendations must be genuinely native to that US state/region. Use the zip code to identify the correct USDA hardiness zone and ecoregion.' + (realCity ? ' The SITE ANALYSIS must refer to the city/town as "' + realCity + ', ' + realState + '" exactly as given above — do not guess a different city name.' : '') + photoCheckInstruction + '\n\nRespond in EXACTLY this format:\n\nSITE ANALYSIS:\n[2-3 sentences: climate zone, typical soil and rainfall, any photo observations. Be specific to this region.]\n\nRECOMMENDED NATIVE PLANTS:\n[5-7 plants genuinely native to this US state/region. Each on its own line:\n- Common Name (Scientific name) — one sentence why it fits this site, sun exposure, and goals.]\n\nPLANTING TIMELINE:\n[4-5 season-by-season steps tailored to this specific climate. Be concrete and region-specific.]\n\nSPECIES COUNT: [number only]';
-        var messages = [{
-            role: 'user',
-            content: imgData ? [{
-                type: 'image',
-                source: {
-                    type: 'base64',
-                    media_type: imgType,
-                    data: imgData
-                }
-            }, {
-                type: 'text',
-                text: prompt
-            }] : prompt
-        }];
+        var messages = [{ role: 'user', content: imgData ? [{ type: 'image', source: { type: 'base64', media_type: imgType, data: imgData } }, { type: 'text', text: prompt }] : prompt }];
         try {
             var resp = await fetch('/.netlify/functions/generate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'claude-haiku-4-5-20251001',
-                    max_tokens: 800,
-                    messages: messages
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 800, messages: messages })
             });
             var data = await resp.json();
-            if (data.error)
-                throw new Error(data.error.message || 'API error');
+            if (data.error) throw new Error(data.error.message || 'API error');
             var text = data.content && data.content[0] ? data.content[0].text : '';
             var mismatchMatch = text.match(/PHOTO_MISMATCH:\s*(.+)/);
             if (mismatchMatch) {
@@ -2702,8 +1956,7 @@
                 document.getElementById('photo-mismatch-text').textContent = mismatchMatch[1].trim();
                 document.getElementById('photo-mismatch-notice').style.display = 'block';
                 document.getElementById('preview-wrap').style.display = 'none';
-                imgData = null;
-                imgType = null;
+                imgData = null; imgType = null;
                 var fi = document.getElementById('file-input');
                 if (fi) fi.value = '';
                 return;
@@ -2718,11 +1971,9 @@
             document.getElementById('r-layout-sub').textContent = 'Suggested planting arrangement · ' + sizeLabel;
             document.getElementById('r-site').textContent = sa ? sa[1].trim() : 'Site analysis complete.';
             if (rp) {
-                var plantLines = rp[1].trim().split('\n').filter(function(l) {
-                    return l.trim();
-                });
+                var plantLines = rp[1].trim().split('\n').filter(function(l) { return l.trim(); });
                 document.getElementById('r-plants').innerHTML = plantLines.map(function(l) {
-                    var clean = l.replace(/^-\s*/, '');
+                    var clean = l.replace(/^-\s*/,'');
                     var parts = clean.split('—');
                     if (parts.length > 1) {
                         return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;"><span style="font-weight:500;color:#1a3a0f;">' + parts[0].trim() + '</span><span style="color:#6b6558;"> — ' + parts.slice(1).join('—').trim() + '</span></div>';
@@ -2733,14 +1984,12 @@
                 document.getElementById('r-plants').textContent = text;
             }
             if (pt) {
-                var timeLines = pt[1].trim().split('\n').filter(function(l) {
-                    return l.trim();
-                });
+                var timeLines = pt[1].trim().split('\n').filter(function(l) { return l.trim(); });
                 document.getElementById('r-time').innerHTML = timeLines.map(function(l) {
-                    var clean = l.replace(/\*\*/g, '');
+                    var clean = l.replace(/\*\*/g,'');
                     var ci = clean.indexOf(':');
                     if (ci > -1 && ci < 35) {
-                        return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;"><span style="font-weight:500;color:#1a3a0f;">' + clean.substring(0, ci) + ':</span>' + clean.substring(ci + 1) + '</div>';
+                        return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;"><span style="font-weight:500;color:#1a3a0f;">' + clean.substring(0,ci) + ':</span>' + clean.substring(ci+1) + '</div>';
                     }
                     return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;">' + clean + '</div>';
                 }).join('');
@@ -2748,10 +1997,7 @@
                 document.getElementById('r-time').textContent = 'See recommendations above.';
             }
             document.getElementById('r-count').textContent = sc ? sc[1] : '6';
-            if (rp) {
-                var plants = parsePlants(rp[1]);
-                drawLayout(plants, yardSize);
-            }
+            if (rp) { var plants = parsePlants(rp[1]); drawLayout(plants, yardSize); }
         } catch (err) {
             var ec = document.getElementById('error-container');
             ec.innerHTML = '<div class="error-box">Could not generate Greenprint: ' + err.message + '. Please try again in a moment.</div>';
@@ -2763,36 +2009,26 @@
         renderNurseries('all');
         goTo(3);
     }
+
     function restart() {
         clearPhoto();
         document.getElementById('zip').value = '';
         document.getElementById('yard-size').value = '';
         document.getElementById('sun').value = '';
-        document.querySelectorAll('.goal-card').forEach(function(c) {
-            c.classList.remove('sel');
-        });
-        document.querySelectorAll('.astep').forEach(function(a) {
-            a.classList.remove('on');
-        });
+        document.querySelectorAll('.goal-card').forEach(function(c) { c.classList.remove('sel'); });
+        document.querySelectorAll('.astep').forEach(function(a) { a.classList.remove('on'); });
         document.getElementById('error-container').innerHTML = '';
-        currentZip = '';
-        yardSize = 'tiny';
+        currentZip = ''; yardSize = 'tiny';
         goTo(0);
     }
+
     var ua = document.getElementById('upload-area');
-    ua.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        ua.classList.add('drag');
-    });
-    ua.addEventListener('dragleave', function() {
-        ua.classList.remove('drag');
-    });
+    ua.addEventListener('dragover', function(e) { e.preventDefault(); ua.classList.add('drag'); });
+    ua.addEventListener('dragleave', function() { ua.classList.remove('drag'); });
     ua.addEventListener('drop', function(e) {
-        e.preventDefault();
-        ua.classList.remove('drag');
+        e.preventDefault(); ua.classList.remove('drag');
         var f = e.dataTransfer.files[0];
-        if (f && f.type.startsWith('image/'))
-            loadPhoto(f);
+        if (f && f.type.startsWith('image/')) loadPhoto(f);
     });
     </script>
 </body>
