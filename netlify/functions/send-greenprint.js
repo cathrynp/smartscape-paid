@@ -51,11 +51,11 @@ exports.handler = async function(event) {
   try {
     if (nurseries && typeof nurseries === 'object') {
       if (nurseries.local && nurseries.local.length) {
-        nurseryHTML += '<tr><td style="font-size:11px;font-weight:500;color:#6b6558;letter-spacing:0.06em;text-transform:uppercase;padding:12px 0 6px;border-bottom:1px solid #eee;">📍 ' + (nurseries.regionLabel || 'Your region') + '</td></tr>';
+        nurseryHTML += '<tr><td style="font-size:12px;font-weight:700;color:#1a3a0f;letter-spacing:0.06em;text-transform:uppercase;padding:10px 12px;margin-bottom:8px;background:#f0f7eb;border:1px solid #d0e8c4;border-radius:6px;">📍 ' + (nurseries.regionLabel || 'Your region') + '</td></tr>';
         nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
       }
       if (nurseries.national && nurseries.national.length) {
-        nurseryHTML += '<tr><td style="font-size:11px;font-weight:500;color:#6b6558;letter-spacing:0.06em;text-transform:uppercase;padding:16px 0 6px;border-bottom:1px solid #eee;">🚚 Ships nationwide</td></tr>';
+        nurseryHTML += '<tr><td style="font-size:12px;font-weight:700;color:#1a3a0f;letter-spacing:0.06em;text-transform:uppercase;padding:10px 12px;margin-bottom:8px;background:#f0f7eb;border:1px solid #d0e8c4;border-radius:6px;">🚚 Order Online — Nurseries That Ship Nationwide</td></tr>';
         nurseryHTML += nurseries.national.map(renderNurseryRow).join('');
       }
     }
