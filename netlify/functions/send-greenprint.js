@@ -100,12 +100,21 @@ exports.handler = async function(event) {
       : l.trim();
 
     if (includePhotos && thumbMap[idx]) {
-      return '<li style="margin-bottom:12px;list-style:none;display:flex;align-items:flex-start;gap:12px;">'
-        + '<img src="' + thumbMap[idx] + '" alt="" width="64" height="64" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid #e0ddd6;"/>'
-        + '<span style="flex:1;">' + nameHTML + '</span>'
-        + '</li>';
+      return '<tr><td style="padding:10px 0;border-bottom:1px solid #f0ede8;vertical-align:top;">'
+        + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+        + '<td style="width:72px;vertical-align:top;padding-right:12px;">'
+        + '<img src="' + thumbMap[idx] + '" alt="" width="64" height="64" style="width:64px;height:64px;object-fit:cover;border-radius:8px;display:block;border:1px solid #e0ddd6;"/>'
+        + '</td>'
+        + '<td style="vertical-align:middle;font-size:14px;color:#333;line-height:1.6;">' + nameHTML + '</td>'
+        + '</tr></table>'
+        + '</td></tr>';
     }
-    return '<li style="margin-bottom:8px;">' + nameHTML + '</li>';
+    return '<tr><td style="padding:10px 0;border-bottom:1px solid #f0ede8;font-size:14px;color:#333;line-height:1.6;">'
+      + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+      + '<td style="width:72px;vertical-align:top;padding-right:12px;"></td>'
+      + '<td style="vertical-align:middle;">' + nameHTML + '</td>'
+      + '</tr></table>'
+      + '</td></tr>';
   }).join('');
 
   // Format timeline lines
@@ -145,7 +154,7 @@ exports.handler = async function(event) {
         <!-- Plants -->
         <tr><td style="padding:24px 36px 0;">
           <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #c8e6b8;padding-bottom:8px;">🌱 Recommended Native Plants</h2>
-          <ul style="margin:0;padding-left:${includePhotos ? '0' : '20px'};font-size:14px;color:#333;line-height:1.6;">${plantLines || '<li style="margin-bottom:8px;">See your Greenprint for plant recommendations.</li>'}</ul>
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">${plantLines || '<tr><td style="padding:10px 0;font-size:14px;color:#333;">See your Greenprint for plant recommendations.</td></tr>'}</table>
         </td></tr>
 
         <!-- Timeline -->
