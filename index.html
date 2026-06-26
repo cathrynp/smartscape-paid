@@ -785,7 +785,7 @@
         var sun = document.getElementById('sun').value || 'mixed sun';
         var goals = getGoals();
         goTo(2);
-        [0,1,2,3,4].forEach(function(i) { setTimeout(function() { var el = document.getElementById('as'+i); if (el) el.classList.add('on'); }, i*900); });
+        [0,1,2,3,4].forEach(function(i) { setTimeout(function() { var el = document.getElementById('as'+i); if (el) el.classList.add('on'); }, 500 + i*900); });
         var realCity = '', realState = '';
         try {
             var geoResp = await fetch('https://api.zippopotam.us/us/'+zip);
