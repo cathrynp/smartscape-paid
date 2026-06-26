@@ -1652,6 +1652,117 @@
         return 'national';
     }
 
+    function getEcoregion(zip) {
+        var z = parseInt(zip) || 0;
+        if (!z) return null;
+        // Oregon
+        if (z >= 97000 && z <= 97060) return 'Willamette Valley ecoregion (EPA Level III)';
+        if (z >= 97061 && z <= 97299) return 'Willamette Valley ecoregion (EPA Level III)';
+        if (z === 97031 || z === 97014 || z === 97041) return 'Columbia River Gorge ecoregion';
+        if (z >= 97300 && z <= 97499) return 'Willamette Valley ecoregion (EPA Level III)';
+        if (z >= 97500 && z <= 97699) return 'Klamath Mountains ecoregion (EPA Level III)';
+        if (z >= 97700 && z <= 97999) return 'Blue Mountains / Columbia Plateau ecoregion (EPA Level III)';
+        // Washington
+        if (z >= 98000 && z <= 98499) return 'Puget Lowland ecoregion (EPA Level III)';
+        if (z >= 98500 && z <= 98699) return 'Coast Range / Puget Lowland ecoregion (EPA Level III)';
+        if (z >= 98700 && z <= 98999) return 'Columbia Plateau / Blue Mountains ecoregion (EPA Level III)';
+        // California
+        if (z >= 94000 && z <= 94799) return 'California Coastal Sage, Chaparral, and Oak Woodlands ecoregion — San Francisco Bay Area (EPA Level III)';
+        if ((z >= 94800 && z <= 94999) || (z >= 95400 && z <= 95499)) return 'California Coastal Sage and Chaparral ecoregion — Sonoma / North Bay (EPA Level III)';
+        if ((z >= 95000 && z <= 95399) || (z >= 95500 && z <= 95999)) return 'Central California Valley ecoregion (EPA Level III)';
+        if (z >= 90000 && z <= 93599) return 'Southern California Mountains and Valleys ecoregion (EPA Level III)';
+        if (z >= 93600 && z <= 93999) return 'Southern California Mountains and Valleys / Mojave Basin ecoregion (EPA Level III)';
+        // Nevada
+        if ((z >= 88900 && z <= 88999) || (z >= 89000 && z <= 89199) || (z >= 89300 && z <= 89399)) return 'Mojave Basin and Range ecoregion (EPA Level III)';
+        if ((z >= 89200 && z <= 89299) || (z >= 89400 && z <= 89599)) return 'Sierra Nevada ecoregion — Reno / Carson City area (EPA Level III)';
+        if (z >= 89600 && z <= 89999) return 'Central Basin and Range ecoregion — Great Basin Nevada (EPA Level III)';
+        // Arizona
+        if (z >= 85000 && z <= 85499) return 'Arizona/New Mexico Plateau ecoregion — Phoenix / Sonoran Desert (EPA Level III)';
+        if (z >= 85500 && z <= 86999) return 'Arizona/New Mexico Mountains ecoregion (EPA Level III)';
+        // New Mexico
+        if (z >= 87000 && z <= 88499) return 'Chihuahuan Deserts ecoregion (EPA Level III)';
+        // Utah
+        if (z >= 84000 && z <= 84499) return 'Wasatch and Uinta Mountains ecoregion (EPA Level III)';
+        if (z >= 84500 && z <= 84999) return 'Colorado Plateaus ecoregion (EPA Level III)';
+        // Colorado
+        if (z >= 80000 && z <= 80699) return 'High Plains ecoregion — Front Range Colorado (EPA Level III)';
+        if (z >= 80700 && z <= 81999) return 'Southern Rockies ecoregion (EPA Level III)';
+        // Wyoming
+        if (z >= 82000 && z <= 83199) return 'Wyoming Basin ecoregion (EPA Level III)';
+        // Montana
+        if (z >= 59000 && z <= 59999) return 'Northwestern Glaciated Plains / Middle Rockies ecoregion (EPA Level III)';
+        // Idaho
+        if (z >= 83200 && z <= 83999) return 'Snake River Plain ecoregion (EPA Level III)';
+        // Hawaii
+        if (z >= 96700 && z <= 96899) return 'Hawaii ecoregion — tropical island native plant community';
+        // Alaska
+        if (z >= 99500 && z <= 99999) return 'Alaska boreal forest / tundra ecoregion';
+        // Texas
+        if (z >= 75000 && z <= 76999) return 'Cross Timbers ecoregion — North Texas (EPA Level III)';
+        if (z >= 77000 && z <= 77999) return 'Western Gulf Coastal Plain ecoregion — Houston area (EPA Level III)';
+        if (z >= 78000 && z <= 78999) return 'Edwards Plateau / Chihuahuan Deserts ecoregion — Central/West Texas (EPA Level III)';
+        if (z >= 79000 && z <= 79999) return 'Chihuahuan Deserts / High Plains ecoregion — West Texas (EPA Level III)';
+        // Oklahoma
+        if (z >= 73000 && z <= 74999) return 'Central Great Plains / Cross Timbers ecoregion (EPA Level III)';
+        // Arkansas
+        if (z >= 71600 && z <= 72999) return 'Ozark Highlands / Arkansas Valley ecoregion (EPA Level III)';
+        // Louisiana
+        if (z >= 70000 && z <= 71499) return 'Mississippi Alluvial Plain / Western Gulf Coastal Plain ecoregion (EPA Level III)';
+        // Mississippi
+        if (z >= 38600 && z <= 39799) return 'Mississippi Alluvial Plain / Southeastern Plains ecoregion (EPA Level III)';
+        // Florida
+        if (z >= 32000 && z <= 33999) return 'Southern Florida Coastal Plain ecoregion (EPA Level III)';
+        if (z >= 34000 && z <= 34999) return 'Florida / Southern Florida Coastal Plain ecoregion (EPA Level III)';
+        // Georgia & North Carolina
+        if (z >= 30000 && z <= 31999) return 'Southeastern Plains ecoregion — Georgia (EPA Level III)';
+        if (z >= 27000 && z <= 28999) return 'Piedmont / Blue Ridge ecoregion — North Carolina (EPA Level III)';
+        // South Carolina
+        if (z >= 29000 && z <= 29999) return 'Southeastern Plains / Piedmont ecoregion — South Carolina (EPA Level III)';
+        // Tennessee & Alabama
+        if (z >= 37000 && z <= 38599) return 'Interior Plateau / Ridge and Valley ecoregion — Tennessee (EPA Level III)';
+        if (z >= 35000 && z <= 36999) return 'Southeastern Plains / Ridge and Valley ecoregion — Alabama (EPA Level III)';
+        // Kentucky
+        if (z >= 40000 && z <= 42799) return 'Interior Plateau / Blue Grass ecoregion — Kentucky (EPA Level III)';
+        // West Virginia
+        if (z >= 24700 && z <= 26899) return 'Central Appalachians ecoregion (EPA Level III)';
+        // Virginia & DC
+        if ((z >= 22000 && z <= 24699) || (z >= 20000 && z <= 20599)) return 'Piedmont / Blue Ridge ecoregion — Virginia (EPA Level III)';
+        // Maryland & Delaware
+        if ((z >= 20600 && z <= 21999) || (z >= 19700 && z <= 19999)) return 'Piedmont / Atlantic Coastal Plain ecoregion — Maryland/Delaware (EPA Level III)';
+        // Pennsylvania
+        if (z >= 15000 && z <= 19699) return 'Ridge and Valley / Piedmont ecoregion — Pennsylvania (EPA Level III)';
+        // New York & New Jersey
+        if (z >= 10000 && z <= 14999) return 'Northeastern Highlands / Atlantic Coastal Plain ecoregion — New York (EPA Level III)';
+        if (z >= 7000 && z <= 8999) return 'Piedmont / Atlantic Coastal Plain ecoregion — New Jersey (EPA Level III)';
+        // Connecticut & Rhode Island
+        if ((z >= 6000 && z <= 6999) || (z >= 2800 && z <= 2999)) return 'Northeastern Highlands ecoregion — Southern New England (EPA Level III)';
+        // Vermont, NH, ME, MA
+        if (z >= 1000 && z <= 5999) return 'Northeastern Highlands / Atlantic Highlands ecoregion — Northern New England (EPA Level III)';
+        // Ohio
+        if (z >= 43000 && z <= 45999) return 'Eastern Corn Belt Plains / Erie Drift Plain ecoregion — Ohio (EPA Level III)';
+        // Michigan
+        if (z >= 48000 && z <= 49999) return 'Huron/Erie Lake Plain / Southern Michigan / Northern Lower Michigan ecoregion (EPA Level III)';
+        // Indiana
+        if (z >= 46000 && z <= 47999) return 'Eastern Corn Belt Plains ecoregion — Indiana (EPA Level III)';
+        // Illinois
+        if (z >= 60000 && z <= 62999) return 'Central Corn Belt Plains / Driftless Area ecoregion — Illinois (EPA Level III)';
+        // Wisconsin
+        if (z >= 53000 && z <= 54999) return 'Driftless Area / Northern Lakes and Forests ecoregion — Wisconsin (EPA Level III)';
+        // Minnesota
+        if (z >= 55000 && z <= 56999) return 'Northern Lakes and Forests / Western Corn Belt Plains ecoregion — Minnesota (EPA Level III)';
+        // Iowa
+        if (z >= 50000 && z <= 52999) return 'Western Corn Belt Plains ecoregion — Iowa (EPA Level III)';
+        // Missouri & Kansas
+        if (z >= 63000 && z <= 65999) return 'Ozark Highlands / Central Irregular Plains ecoregion — Missouri (EPA Level III)';
+        if (z >= 66000 && z <= 67999) return 'Central Great Plains / Flint Hills ecoregion — Kansas (EPA Level III)';
+        // Nebraska
+        if (z >= 68000 && z <= 69999) return 'Western Corn Belt Plains / High Plains ecoregion — Nebraska (EPA Level III)';
+        // North & South Dakota
+        if (z >= 57000 && z <= 57999) return 'Northwestern Glaciated Plains / Northwestern Great Plains ecoregion — South Dakota (EPA Level III)';
+        if (z >= 58000 && z <= 58999) return 'Northwestern Glaciated Plains ecoregion — North Dakota (EPA Level III)';
+        return null;
+    }
+
     function getRegionLabel(r) {
         var m = {
             'or-portland': 'Oregon — Portland metro & Willamette Valley',
@@ -1961,8 +2072,10 @@
             console.log('Zip lookup failed, falling back to AI estimate:', geoErr);
         }
         var locationLine = realCity ? ('- Actual city/town for this zip code (confirmed, use this exact name): ' + realCity + ', ' + realState + '\n') : '';
+        var ecoregion = getEcoregion(zip);
+        var ecoregionLine = ecoregion ? ('- EPA ecoregion: ' + ecoregion + '\n') : '';
         var photoCheckInstruction = imgData ? '\n\nIMPORTANT: First check whether the uploaded photo actually shows an outdoor yard, garden, or landscaping area. If it does NOT (for example, it shows a person, a pet, an indoor room, a patio with no plantable ground, an unrelated object, etc.), respond with ONLY this exact line and nothing else:\nPHOTO_MISMATCH: [one short, friendly sentence explaining what you see instead and asking for a photo of their yard]\n\nIf the photo DOES show a yard or outdoor planting area, ignore this instruction and proceed normally with the full response format below.' : '';
-        var prompt = 'You are SmartScape, an expert in native plants and climate-resilient landscaping for all US regions.\n\nSite details:\n- Zip code: ' + zip + '\n' + locationLine + '- Yard size: ' + sizeLabel + '\n- Sun exposure: ' + sun + '\n- Goals: ' + goals + '\n' + (imgData ? '- A photo of the site has been uploaded and included.\n' : '') + '\nAll plant recommendations must be genuinely native to that US state/region. Use the zip code to identify the correct USDA hardiness zone and ecoregion.' + (realCity ? ' The SITE ANALYSIS must refer to the city/town as "' + realCity + ', ' + realState + '" exactly as given above — do not guess a different city name.' : '') + photoCheckInstruction + '\n\nRespond in EXACTLY this format:\n\nSITE ANALYSIS:\n[2-3 sentences: climate zone, typical soil and rainfall, any photo observations. Be specific to this region.]\n\nRECOMMENDED NATIVE PLANTS:\n[5-7 plants genuinely native to this US state/region. Each on its own line:\n- Common Name (Scientific name) — one sentence why it fits this site, sun exposure, and goals.]\n\nPLANTING TIMELINE:\n[4-5 season-by-season steps tailored to this specific climate. Be concrete and region-specific.]\n\nSPECIES COUNT: [number only]';
+        var prompt = 'You are SmartScape, an expert in native plants and climate-resilient landscaping for all US regions.\n\nSite details:\n- Zip code: ' + zip + '\n' + locationLine + ecoregionLine + '- Yard size: ' + sizeLabel + '\n- Sun exposure: ' + sun + '\n- Goals: ' + goals + '\n' + (imgData ? '- A photo of the site has been uploaded and included.\n' : '') + '\nCRITICAL: All plant recommendations must be genuinely native to the SPECIFIC ecoregion listed above — not just the general state or region. A plant native to California is NOT acceptable for a Willamette Valley site. A plant native to Eastern Oregon is NOT acceptable for a Portland metro or Willamette Valley site. Use the EPA ecoregion to select plants with precision.' + (realCity ? ' The SITE ANALYSIS must refer to the city/town as "' + realCity + ', ' + realState + '" exactly as given above — do not guess a different city name.' : '') + photoCheckInstruction + '\n\nRespond in EXACTLY this format:\n\nSITE ANALYSIS:\n[2-3 sentences: climate zone, typical soil and rainfall, any photo observations. Be specific to this region.]\n\nRECOMMENDED NATIVE PLANTS:\n[5-7 plants genuinely native to this specific ecoregion. Each on its own line:\n- Common Name (Scientific name) — one sentence why it fits this site, sun exposure, and goals.]\n\nPLANTING TIMELINE:\n[4-5 season-by-season steps tailored to this specific climate. Be concrete and region-specific.]\n\nSPECIES COUNT: [number only]';
         var messages = [{ role: 'user', content: imgData ? [{ type: 'image', source: { type: 'base64', media_type: imgType, data: imgData } }, { type: 'text', text: prompt }] : prompt }];
         try {
             var resp = await fetch('/.netlify/functions/generate', {
