@@ -823,11 +823,35 @@
             document.getElementById('r-site').textContent = sa ? sa[1].trim() : 'Site analysis complete.';
             if (rp) {
                 var plantLines = rp[1].trim().split('\n').filter(function(l) { return l.trim(); });
-                document.getElementById('r-plants').innerHTML = plantLines.map(function(l) {
+                // Render plants immediately as text, then fetch thumbnails
+                document.getElementById('r-plants').innerHTML = plantLines.map(function(l, idx) {
                     var clean = l.replace(/^-\s*/,''); var parts = clean.split('—');
-                    if (parts.length > 1) return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;"><span style="font-weight:500;color:#1a3a0f;">'+parts[0].trim()+'</span><span style="color:#6b6558;"> — '+parts.slice(1).join('—').trim()+'</span></div>';
-                    return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;">'+clean+'</div>';
+                    var nameBlock = parts.length > 1
+                        ? '<span style="font-weight:500;color:#1a3a0f;">'+parts[0].trim()+'</span><span style="color:#6b6558;"> — '+parts.slice(1).join('—').trim()+'</span>'
+                        : '<span>'+clean+'</span>';
+                    return '<div id="plant-row-'+idx+'" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f0ede8;">'
+                        + '<img id="plant-thumb-'+idx+'" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f0f0ec;display:none;"/>'
+                        + '<div style="flex:1;min-width:0;">'+nameBlock+'</div>'
+                        + '</div>';
                 }).join('');
+                // Fetch Wikipedia thumbnails in parallel
+                plantLines.forEach(function(l, idx) {
+                    var sciMatch = l.match(/\(([A-Z][a-z]+(?:\s+[a-z]+)+)\)/);
+                    if (!sciMatch) return;
+                    var sciName = sciMatch[1].replace(/\s+/g, '_');
+                    fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + sciName)
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.thumbnail && data.thumbnail.source) {
+                                var img = document.getElementById('plant-thumb-'+idx);
+                                if (img) {
+                                    img.src = data.thumbnail.source;
+                                    img.style.display = 'block';
+                                }
+                            }
+                        })
+                        .catch(function() {}); // silently skip if fetch fails
+                });
             } else { document.getElementById('r-plants').textContent = text; }
             if (pt) {
                 var timeLines = pt[1].trim().split('\n').filter(function(l) { return l.trim(); });
