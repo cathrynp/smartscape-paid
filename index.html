@@ -326,6 +326,10 @@
                     <input type="text" id="email-input" placeholder="your@email.com" style="flex:1;min-width:180px;font-size:14px;"/>
                     <button class="btn-primary" id="email-send-btn" onclick="sendGreenprint()" style="width:auto;margin-top:0;padding:11px 20px;font-size:14px;">Send</button>
                 </div>
+                <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;">
+                    <input type="checkbox" id="include-photos-checkbox" style="width:15px;height:15px;accent-color:var(--green-mid);cursor:pointer;"/>
+                    <span style="font-size:12px;color:var(--warm-gray);">Include plant photos in my email</span>
+                </label>
                 <div id="email-status" style="font-size:13px;margin-top:10px;min-height:18px;"></div>
             </div>
             <button class="btn-ghost" onclick="restart()">↺ Start a new Greenprint</button>
@@ -785,7 +789,7 @@
         var sun = document.getElementById('sun').value || 'mixed sun';
         var goals = getGoals();
         goTo(2);
-        [0,1,2,3,4].forEach(function(i) { setTimeout(function() { var el = document.getElementById('as'+i); if (el) el.classList.add('on'); }, 500 + i*900); });
+        [0,1,2,3,4].forEach(function(i) { setTimeout(function() { var el = document.getElementById('as'+i); if (el) el.classList.add('on'); }, 500 + i*2000); });
         var realCity = '', realState = '';
         try {
             var geoResp = await fetch('https://api.zippopotam.us/us/'+zip);
@@ -912,9 +916,10 @@
         var localNurseries = NURSERIES.filter(function(n) { return n.regions.indexOf(region) !== -1; });
         var nationalNurseries = NURSERIES.filter(function(n) { return n.regions.indexOf('national') !== -1; });
         var nurseryData = { regionLabel: getRegionLabel(region), local: localNurseries, national: nationalNurseries };
+        var includePhotos = document.getElementById('include-photos-checkbox') ? document.getElementById('include-photos-checkbox').checked : false;
         fetch('/.netlify/functions/send-greenprint', {
             method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ email: email, zip: zip, siteAnalysis: siteText, plants: plantsText, timeline: timeText, nurseries: nurseryData })
+            body: JSON.stringify({ email: email, zip: zip, siteAnalysis: siteText, plants: plantsText, timeline: timeText, nurseries: nurseryData, includePhotos: includePhotos })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
