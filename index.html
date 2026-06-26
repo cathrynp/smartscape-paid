@@ -677,7 +677,7 @@
         document.getElementById('r-nursery-sub').textContent = local.length ? local.length + ' local nurseries near zip ' + currentZip + ' — all carry native plants for your region' : 'No local nurseries in our database yet for this region — national mail-order options below ship anywhere in the US';
         var html = '';
         if (showLocal.length) { html += '<div class="region-label">📍 ' + getRegionLabel(region) + '</div>'; html += showLocal.map(renderRow).join(''); }
-        if (showNat.length) { html += '<div class="region-label" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + '">🚚 Ships nationwide — delivered to your door</div>'; html += showNat.map(renderRow).join(''); }
+        if (showNat.length) { html += '<div class="region-label" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + '">🚚 Order Online — Nurseries That Ship Nationwide</div>'; html += showNat.map(renderRow).join(''); }
         if (!html) html = '<p style="font-size:13px;color:#aaa;">No results — try "All".</p>';
         document.getElementById('nursery-list').innerHTML = html;
     }
