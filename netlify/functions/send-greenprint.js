@@ -1,3 +1,28 @@
+function renderNurseryRow(n) {
+  const tagColors = {
+    wholesale: 'background:#fef3e2;color:#7a4f0a;',
+    ships: 'background:#e8f4fd;color:#0a4a7a;',
+    seed: 'background:#f3e8fd;color:#4a0a7a;',
+    resource: 'background:#f0ede8;color:#5a5248;',
+    directory: 'background:#f0ede8;color:#5a5248;'
+  };
+  const tags = (n.tags || []).slice(0, 3).map(function(t) {
+    const style = tagColors[t] || 'background:#f0f7eb;color:#1a3a0f;';
+    return '<span style="font-size:10px;padding:2px 8px;border-radius:99px;' + style + 'margin-right:4px;">' + t + '</span>';
+  }).join('');
+  return '<tr><td style="padding:10px 0;border-bottom:1px solid #f0ede8;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
+    '<td style="vertical-align:top;">' +
+    '<div style="font-size:14px;font-weight:500;color:#1c1a16;">' + (n.name || '') + '</div>' +
+    '<div style="font-size:12px;color:#6b6558;margin-top:2px;line-height:1.45;">' + (n.city || '') + ', ' + (n.state || '') + ' — ' + (n.desc || '') + '</div>' +
+    '<div style="margin-top:5px;">' + tags + '</div>' +
+    '</td>' +
+    '<td style="vertical-align:top;text-align:right;white-space:nowrap;padding-left:12px;">' +
+    '<a href="' + (n.url || '#') + '" style="font-size:12px;color:#2d6a1f;font-weight:500;text-decoration:none;">Visit →</a>' +
+    '</td></tr></table>' +
+    '</td></tr>';
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -21,33 +46,45 @@ exports.handler = async function(event) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Email service not configured' }) };
   }
 
-  // Format nursery text into clean lines
-  const nurseryLines = (nurseries || '').split('\n')
-    .filter(l => l.trim())
-    .map(l => `<li style="margin-bottom:6px;">${l.trim()}</li>`)
-    .join('');
+  // Build nursery HTML from structured object
+  let nurseryHTML = '';
+  try {
+    if (nurseries && typeof nurseries === 'object') {
+      if (nurseries.local && nurseries.local.length) {
+        nurseryHTML += '<tr><td style="font-size:11px;font-weight:500;color:#6b6558;letter-spacing:0.06em;text-transform:uppercase;padding:12px 0 6px;border-bottom:1px solid #eee;">📍 ' + (nurseries.regionLabel || 'Your region') + '</td></tr>';
+        nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
+      }
+      if (nurseries.national && nurseries.national.length) {
+        nurseryHTML += '<tr><td style="font-size:11px;font-weight:500;color:#6b6558;letter-spacing:0.06em;text-transform:uppercase;padding:16px 0 6px;border-bottom:1px solid #eee;">🚚 Ships nationwide</td></tr>';
+        nurseryHTML += nurseries.national.map(renderNurseryRow).join('');
+      }
+    }
+  } catch(nurseryErr) {
+    console.error('Nursery render error:', nurseryErr);
+    nurseryHTML = '';
+  }
 
   // Format plant lines
   const plantLines = (plants || '').split('\n')
-    .filter(l => l.trim())
-    .map(l => {
+    .filter(function(l) { return l.trim(); })
+    .map(function(l) {
       const parts = l.split('—');
       if (parts.length > 1) {
-        return `<li style="margin-bottom:8px;"><strong style="color:#1a3a0f;">${parts[0].trim()}</strong> — ${parts.slice(1).join('—').trim()}</li>`;
+        return '<li style="margin-bottom:8px;"><strong style="color:#1a3a0f;">' + parts[0].trim() + '</strong> — ' + parts.slice(1).join('—').trim() + '</li>';
       }
-      return `<li style="margin-bottom:8px;">${l.trim()}</li>`;
+      return '<li style="margin-bottom:8px;">' + l.trim() + '</li>';
     })
     .join('');
 
   // Format timeline lines
   const timeLines = (timeline || '').split('\n')
-    .filter(l => l.trim())
-    .map(l => {
+    .filter(function(l) { return l.trim(); })
+    .map(function(l) {
       const ci = l.indexOf(':');
       if (ci > -1 && ci < 40) {
-        return `<li style="margin-bottom:8px;"><strong style="color:#1a3a0f;">${l.substring(0, ci)}:</strong>${l.substring(ci+1)}</li>`;
+        return '<li style="margin-bottom:8px;"><strong style="color:#1a3a0f;">' + l.substring(0, ci) + ':</strong>' + l.substring(ci+1) + '</li>';
       }
-      return `<li style="margin-bottom:8px;">${l.trim()}</li>`;
+      return '<li style="margin-bottom:8px;">' + l.trim() + '</li>';
     })
     .join('');
 
@@ -86,10 +123,10 @@ exports.handler = async function(event) {
         </td></tr>
 
         <!-- Nurseries -->
-        ${nurseryLines ? `
+        ${nurseryHTML ? `
         <tr><td style="padding:24px 36px 0;">
           <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #c8e6b8;padding-bottom:8px;">🏡 Native Plant Nurseries Near You</h2>
-          <ul style="margin:0;padding-left:20px;font-size:14px;color:#333;line-height:1.6;">${nurseryLines}</ul>
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">${nurseryHTML}</table>
         </td></tr>` : ''}
 
         <!-- Footer -->
@@ -122,22 +159,13 @@ exports.handler = async function(event) {
     const data = await resp.json();
 
     if (resp.ok) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true })
-      };
+      return { statusCode: 200, body: JSON.stringify({ success: true }) };
     } else {
       console.error('Resend error:', data);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ success: false, error: data.message || 'Send failed' })
-      };
+      return { statusCode: 500, body: JSON.stringify({ success: false, error: data.message || 'Send failed' }) };
     }
   } catch(err) {
     console.error('Send error:', err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, error: err.message })
-    };
+    return { statusCode: 500, body: JSON.stringify({ success: false, error: err.message }) };
   }
 };
