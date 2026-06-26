@@ -1042,11 +1042,11 @@
                 <br>
                 your outdoor space
             </div>
-            <div class="section-sub">Enter your zip code. SmartScape's AI analyzes your site to build a personalized Greenprint — including a planting layout diagram.</div>
+            <div class="section-sub">Enter your zip code. SmartScape's AI analyzes your site and builds a personalized native plant plan for your region.</div>
             <div id="upload-area" class="upload-area">
                 <div class="upload-icon">📷</div>
                 <p class="upload-text">
-                    <strong>Optional:</strong> upload a photo of your yard for more personalized analysis
+                    <strong>Optional:</strong> upload a photo of your yard — our AI analyzes it for sun, soil, and site conditions
                 </p>
                 <label for="file-input" class="upload-btn-label">Choose photo</label>
                 <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFile(event)"/>
@@ -1155,7 +1155,7 @@
                     </div>
                     <div class="astep" id="as3">
                         <div class="astep-dot"></div>
-                        Generating planting layout diagram
+                        Assembling your Greenprint
                     </div>
                     <div class="astep" id="as4">
                         <div class="astep-dot"></div>
@@ -1212,7 +1212,7 @@
                         <svg id="layout-svg" width="100%" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:6px;background:white;"></svg>
                     </div>
                     <div class="layout-legend" id="layout-legend"></div>
-                    <p style="font-size:11px;color:#bbb;margin-top:8px;">Layout is illustrative and scaled to your yard size, based on your recommended plants. Precise satellite-mapped layouts are planned for a future update.</p>
+                    <p style="font-size:12px;color:#888;margin-top:8px;line-height:1.5;background:#f5f0e8;border-radius:6px;padding:8px 10px;"><strong>Beta note:</strong> This is an illustrative diagram based on plant sizes and your yard dimensions — not a photo-mapped layout. Precise satellite-mapped layouts using your actual yard geometry are planned for a future update.</p>
                 </div>
             </div>
             <div class="result-card">
@@ -1241,6 +1241,7 @@
                     <div class="cta-roadmap-item">Google Satellite view integration — AI maps your actual yard geometry for a precise planting layout</div>
                     <div class="cta-roadmap-item">Real-time nursery inventory — see exactly which plants are in stock near you today</div>
                     <div class="cta-roadmap-item">Downloadable PDF Greenprint — your full plan in a beautiful, shareable document</div>
+                    <div class="cta-roadmap-item">Plant verification links — each recommended plant linked to its USDA PLANTS Database or OSU Extension entry so you can verify nativity, subspecies, and regional suitability</div>
                     <div class="cta-roadmap-item">Climate-smart calendar scheduling — planting timeline events placed in ecologically correct months for your specific region, not just sequentially from today</div>
                     <div class="cta-roadmap-item">OSU Extension & USDA live data — plans continuously updated with latest climate-adaptive plant research</div>
                 </div>
@@ -2075,7 +2076,7 @@
         var ecoregion = getEcoregion(zip);
         var ecoregionLine = ecoregion ? ('- EPA ecoregion: ' + ecoregion + '\n') : '';
         var photoCheckInstruction = imgData ? '\n\nIMPORTANT: First check whether the uploaded photo actually shows an outdoor yard, garden, or landscaping area. If it does NOT (for example, it shows a person, a pet, an indoor room, a patio with no plantable ground, an unrelated object, etc.), respond with ONLY this exact line and nothing else:\nPHOTO_MISMATCH: [one short, friendly sentence explaining what you see instead and asking for a photo of their yard]\n\nIf the photo DOES show a yard or outdoor planting area, ignore this instruction and proceed normally with the full response format below.' : '';
-        var prompt = 'You are SmartScape, an expert in native plants and climate-resilient landscaping for all US regions.\n\nSite details:\n- Zip code: ' + zip + '\n' + locationLine + ecoregionLine + '- Yard size: ' + sizeLabel + '\n- Sun exposure: ' + sun + '\n- Goals: ' + goals + '\n' + (imgData ? '- A photo of the site has been uploaded and included.\n' : '') + '\nCRITICAL: All plant recommendations must be genuinely native to the SPECIFIC ecoregion listed above — not just the general state or region. A plant native to California is NOT acceptable for a Willamette Valley site. A plant native to Eastern Oregon is NOT acceptable for a Portland metro or Willamette Valley site. Use the EPA ecoregion to select plants with precision.' + (realCity ? ' The SITE ANALYSIS must refer to the city/town as "' + realCity + ', ' + realState + '" exactly as given above — do not guess a different city name.' : '') + photoCheckInstruction + '\n\nRespond in EXACTLY this format:\n\nSITE ANALYSIS:\n[2-3 sentences: climate zone, typical soil and rainfall, any photo observations. Be specific to this region.]\n\nRECOMMENDED NATIVE PLANTS:\n[5-7 plants genuinely native to this specific ecoregion. Each on its own line:\n- Common Name (Scientific name) — one sentence why it fits this site, sun exposure, and goals.]\n\nPLANTING TIMELINE:\n[4-5 season-by-season steps tailored to this specific climate. Be concrete and region-specific.]\n\nSPECIES COUNT: [number only]';
+        var prompt = 'You are SmartScape, an expert in native plants and climate-resilient landscaping for all US regions.\n\nSite details:\n- Zip code: ' + zip + '\n' + locationLine + ecoregionLine + '- Yard size: ' + sizeLabel + '\n- Sun exposure: ' + sun + '\n- Goals: ' + goals + '\n' + (imgData ? '- A photo of the site has been uploaded and included.\n' : '') + '\nCRITICAL: All plant recommendations must be genuinely native to the SPECIFIC ecoregion listed above — not just the general state or region. A plant native to California is NOT acceptable for a Willamette Valley site. A plant native to Eastern Oregon is NOT acceptable for a Portland metro or Willamette Valley site. Use the EPA ecoregion to select plants with precision.' + (realCity ? ' The SITE ANALYSIS must refer to the city/town as "' + realCity + ', ' + realState + '" exactly as given above — do not guess a different city name.' : '') + photoCheckInstruction + '\n\nRespond in EXACTLY this format:\n\nSITE ANALYSIS:\n[2-3 sentences: climate zone, typical soil and rainfall, any photo observations. Be specific to this region.]\n\nRECOMMENDED NATIVE PLANTS:\n[5-7 plants genuinely native to this specific ecoregion. Each on its own line:\n- Common Name (Scientific name) — one sentence why it fits this site, sun exposure, and goals.]\n\nPLANTING TIMELINE:\n[4-5 season-by-season steps tailored to this specific climate. CRITICAL: each step must name the specific plants from your recommendation list above and what action to take with them in that season. Do not give generic advice — every step must reference actual recommended plants by name.]\n\nSPECIES COUNT: [number only]';
         var messages = [{ role: 'user', content: imgData ? [{ type: 'image', source: { type: 'base64', media_type: imgType, data: imgData } }, { type: 'text', text: prompt }] : prompt }];
         try {
             var resp = await fetch('/.netlify/functions/generate', {
