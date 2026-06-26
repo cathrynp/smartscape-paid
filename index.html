@@ -1222,6 +1222,7 @@
                 </div>
                 <div class="result-card-body">
                     <div class="ai-text" id="r-time">—</div>
+                    <button class="btn-ghost" id="ics-btn" onclick="downloadICS()" style="margin-top:1rem;font-size:13px;padding:10px 18px;display:none;">📅 Add planting timeline to my calendar</button>
                 </div>
             </div>
             <div class="result-card">
@@ -2008,6 +2009,8 @@
                 document.getElementById('r-time').textContent = 'See recommendations above.';
             }
             document.getElementById('r-count').textContent = sc ? sc[1] : '6';
+            var icsBtn = document.getElementById('ics-btn');
+            if (icsBtn) icsBtn.style.display = 'block';
             if (rp) { var plants = parsePlants(rp[1]); drawLayout(plants, yardSize); }
         } catch (err) {
             var ec = document.getElementById('error-container');
@@ -2021,6 +2024,56 @@
         goTo(3);
     }
 
+    function downloadICS() {
+        var timeEl = document.getElementById('r-time');
+        if (!timeEl) return;
+        var zip = currentZip || 'your zip';
+        var lines = [];
+        timeEl.querySelectorAll('div').forEach(function(div) {
+            var text = div.textContent.trim();
+            if (text) lines.push(text);
+        });
+        if (!lines.length) return;
+        var now = new Date();
+        var year = now.getFullYear();
+        var icsLines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//SmartScape//Greenprint Generator//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH'
+        ];
+        lines.forEach(function(line, i) {
+            var startDate = new Date(year, i, 1);
+            var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+            var dtstart = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
+            var dtend = new Date(startDate.getFullYear(), startDate.getMonth()+1, 1);
+            var dtendStr = dtend.getFullYear() + pad(dtend.getMonth()+1) + pad(dtend.getDate());
+            var uid = 'greenprint-' + i + '-' + Date.now() + '@smartscape.co';
+            var summary = 'Greenprint: ' + line.substring(0, 60).replace(/,/g, '\\,').replace(/;/g, '\\;');
+            var desc = line.replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+            icsLines = icsLines.concat([
+                'BEGIN:VEVENT',
+                'UID:' + uid,
+                'DTSTART;VALUE=DATE:' + dtstart,
+                'DTEND;VALUE=DATE:' + dtendStr,
+                'SUMMARY:' + summary,
+                'DESCRIPTION:SmartScape Greenprint for zip ' + zip + '\\n\\n' + desc,
+                'END:VEVENT'
+            ]);
+        });
+        icsLines.push('END:VCALENDAR');
+        var blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'greenprint-planting-calendar.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     function restart() {
         clearPhoto();
         document.getElementById('zip').value = '';
@@ -2030,6 +2083,8 @@
         document.querySelectorAll('.astep').forEach(function(a) { a.classList.remove('on'); });
         document.getElementById('error-container').innerHTML = '';
         currentZip = ''; yardSize = 'tiny';
+        var icsBtn = document.getElementById('ics-btn');
+        if (icsBtn) icsBtn.style.display = 'none';
         goTo(0);
     }
 
