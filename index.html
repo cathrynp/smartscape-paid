@@ -2044,7 +2044,7 @@
             'METHOD:PUBLISH'
         ];
         lines.forEach(function(line, i) {
-            var startDate = new Date(year, i, 1);
+            var startDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
             var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
             var dtstart = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
             var dtend = new Date(startDate.getFullYear(), startDate.getMonth()+1, 1);
