@@ -1222,7 +1222,8 @@
                 </div>
                 <div class="result-card-body">
                     <div class="ai-text" id="r-time">—</div>
-                    <button class="btn-ghost" id="ics-btn" onclick="downloadICS()" style="margin-top:1rem;font-size:13px;padding:10px 18px;display:none;">📅 Add planting timeline to my calendar</button>
+                    <button class="btn-ghost" id="ics-btn" onclick="downloadICS()" style="margin-top:1rem;font-size:13px;padding:10px 18px;display:none;">📅 Save this timeline as a reminder</button>
+                    <p id="ics-note" style="display:none;font-size:11px;color:#bbb;margin-top:6px;line-height:1.5;">Dates are approximate — follow the seasonal guidance in each step for your climate. For example, in the Pacific Northwest, planting is best done in fall or early spring when rainfall establishes roots naturally.</p>
                 </div>
             </div>
             <div class="result-card">
@@ -1242,6 +1243,7 @@
                     <div class="cta-roadmap-item">Google Satellite view integration — AI maps your actual yard geometry for a precise planting layout</div>
                     <div class="cta-roadmap-item">Real-time nursery inventory — see exactly which plants are in stock near you today</div>
                     <div class="cta-roadmap-item">Downloadable PDF Greenprint — your full plan in a beautiful, shareable document</div>
+                    <div class="cta-roadmap-item">Climate-smart calendar scheduling — planting timeline events placed in ecologically correct months for your specific region, not just sequentially from today</div>
                     <div class="cta-roadmap-item">OSU Extension & USDA live data — plans continuously updated with latest climate-adaptive plant research</div>
                 </div>
             </div>
@@ -2011,6 +2013,8 @@
             document.getElementById('r-count').textContent = sc ? sc[1] : '6';
             var icsBtn = document.getElementById('ics-btn');
             if (icsBtn) icsBtn.style.display = 'block';
+            var icsNote = document.getElementById('ics-note');
+            if (icsNote) icsNote.style.display = 'block';
             if (rp) { var plants = parsePlants(rp[1]); drawLayout(plants, yardSize); }
         } catch (err) {
             var ec = document.getElementById('error-container');
@@ -2043,35 +2047,11 @@
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH'
         ];
-        var monthMap = {
-            'january':0,'jan':0,'february':1,'feb':1,'march':2,'mar':2,
-            'april':3,'apr':3,'may':4,'june':5,'jun':5,'july':6,'jul':6,
-            'august':7,'aug':7,'september':8,'sep':8,'sept':8,'october':9,'oct':9,
-            'november':10,'nov':10,'december':11,'dec':11,
-            'winter':11,'early spring':1,'spring':2,'late spring':4,
-            'early summer':5,'summer':6,'late summer':7,
-            'early fall':8,'fall':8,'autumn':8,'late fall':10
-        };
-        function guessMonth(text) {
-            var lower = text.toLowerCase();
-            var best = -1;
-            Object.keys(monthMap).forEach(function(k) {
-                if (lower.indexOf(k) !== -1 && k.length > (best === -1 ? -1 : Object.keys(monthMap).filter(function(x){ return lower.indexOf(x) !== -1; }).reduce(function(a,b){ return a.length > b.length ? a : b; }, '').length - 1)) {
-                    best = monthMap[k];
-                }
-            });
-            return best;
-        }
         lines.forEach(function(line, i) {
             var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
-            var guessed = guessMonth(line);
-            var eventYear = now.getFullYear();
-            var eventMonth = guessed !== -1 ? guessed : (now.getMonth() + i);
-            // If the guessed month is before current month, push to next year
-            if (guessed !== -1 && guessed < now.getMonth()) eventYear = now.getFullYear() + 1;
-            var startDate = new Date(eventYear, eventMonth, 1);
+            var startDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
             var dtstart = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
-            var dtend = new Date(startDate.getFullYear(), startDate.getMonth()+1, 1);
+            var dtend = new Date(startDate.getFullYear(), startDate.getMonth() + i + 1, 1);
             var dtendStr = dtend.getFullYear() + pad(dtend.getMonth()+1) + pad(dtend.getDate());
             var uid = 'greenprint-' + i + '-' + Date.now() + '@smartscape.co';
             var summary = 'Greenprint: ' + line.substring(0, 60).replace(/,/g, '\\,').replace(/;/g, '\\;');
@@ -2109,6 +2089,8 @@
         currentZip = ''; yardSize = 'tiny';
         var icsBtn = document.getElementById('ics-btn');
         if (icsBtn) icsBtn.style.display = 'none';
+        var icsNote = document.getElementById('ics-note');
+        if (icsNote) icsNote.style.display = 'none';
         goTo(0);
     }
 
