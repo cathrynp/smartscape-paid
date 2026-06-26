@@ -23,6 +23,20 @@ function renderNurseryRow(n) {
     '</td></tr>';
 }
 
+// Fetch a Wikipedia thumbnail URL for a scientific name (returns null if not found)
+async function fetchWikiThumb(scientificName) {
+  try {
+    const slug = scientificName.trim().replace(/\s+/g, '_');
+    const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(slug);
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return (data.thumbnail && data.thumbnail.source) ? data.thumbnail.source : null;
+  } catch(e) {
+    return null;
+  }
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -35,7 +49,7 @@ exports.handler = async function(event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request' }) };
   }
 
-  const { email, zip, siteAnalysis, plants, timeline, nurseries } = body;
+  const { email, zip, siteAnalysis, plants, timeline, nurseries, includePhotos } = body;
 
   if (!email || !email.includes('@')) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid email' }) };
@@ -51,11 +65,11 @@ exports.handler = async function(event) {
   try {
     if (nurseries && typeof nurseries === 'object') {
       if (nurseries.local && nurseries.local.length) {
-        nurseryHTML += '<tr><td style="font-size:12px;font-weight:700;color:#1a3a0f;letter-spacing:0.06em;text-transform:uppercase;padding:10px 12px;margin-bottom:8px;background:#f0f7eb;border:1px solid #d0e8c4;border-radius:6px;">📍 ' + (nurseries.regionLabel || 'Your region') + '</td></tr>';
+        nurseryHTML += '<tr><td style="font-size:11px;font-weight:500;color:#6b6558;letter-spacing:0.06em;text-transform:uppercase;padding:12px 0 6px;border-bottom:1px solid #eee;">📍 ' + (nurseries.regionLabel || 'Your region') + '</td></tr>';
         nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
       }
       if (nurseries.national && nurseries.national.length) {
-        nurseryHTML += '<tr><td style="font-size:12px;font-weight:700;color:#1a3a0f;letter-spacing:0.06em;text-transform:uppercase;padding:10px 12px;margin-bottom:8px;background:#f0f7eb;border:1px solid #d0e8c4;border-radius:6px;">🚚 Order Online — Nurseries That Ship Nationwide</td></tr>';
+        nurseryHTML += '<tr><td style="font-size:11px;font-weight:500;color:#6b6558;letter-spacing:0.06em;text-transform:uppercase;padding:16px 0 6px;border-bottom:1px solid #eee;">🚚 Ships nationwide</td></tr>';
         nurseryHTML += nurseries.national.map(renderNurseryRow).join('');
       }
     }
@@ -64,17 +78,35 @@ exports.handler = async function(event) {
     nurseryHTML = '';
   }
 
-  // Format plant lines
-  const plantLines = (plants || '').split('\n')
-    .filter(function(l) { return l.trim(); })
-    .map(function(l) {
-      const parts = l.split('—');
-      if (parts.length > 1) {
-        return '<li style="margin-bottom:8px;"><strong style="color:#1a3a0f;">' + parts[0].trim() + '</strong> — ' + parts.slice(1).join('—').trim() + '</li>';
-      }
-      return '<li style="margin-bottom:8px;">' + l.trim() + '</li>';
-    })
-    .join('');
+  // Parse plant lines and optionally fetch Wikipedia thumbnails
+  const rawPlantLines = (plants || '').split('\n').filter(function(l) { return l.trim(); });
+
+  // Build a map of idx -> thumbnail URL (only if includePhotos is true)
+  const thumbMap = {};
+  if (includePhotos) {
+    await Promise.all(rawPlantLines.map(async function(l, idx) {
+      const sciMatch = l.match(/\(([A-Z][a-z]+(?:\s+[a-z]+)+)\)/);
+      if (!sciMatch) return;
+      const thumb = await fetchWikiThumb(sciMatch[1]);
+      if (thumb) thumbMap[idx] = thumb;
+    }));
+  }
+
+  // Render plant rows (with or without photos)
+  const plantLines = rawPlantLines.map(function(l, idx) {
+    const parts = l.split('—');
+    const nameHTML = parts.length > 1
+      ? '<strong style="color:#1a3a0f;">' + parts[0].trim() + '</strong> — ' + parts.slice(1).join('—').trim()
+      : l.trim();
+
+    if (includePhotos && thumbMap[idx]) {
+      return '<li style="margin-bottom:12px;list-style:none;display:flex;align-items:flex-start;gap:12px;">'
+        + '<img src="' + thumbMap[idx] + '" alt="" width="64" height="64" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid #e0ddd6;"/>'
+        + '<span style="flex:1;">' + nameHTML + '</span>'
+        + '</li>';
+    }
+    return '<li style="margin-bottom:8px;">' + nameHTML + '</li>';
+  }).join('');
 
   // Format timeline lines
   const timeLines = (timeline || '').split('\n')
@@ -113,7 +145,7 @@ exports.handler = async function(event) {
         <!-- Plants -->
         <tr><td style="padding:24px 36px 0;">
           <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #c8e6b8;padding-bottom:8px;">🌱 Recommended Native Plants</h2>
-          <ul style="margin:0;padding-left:20px;font-size:14px;color:#333;line-height:1.6;">${plantLines || '<li>See your Greenprint for plant recommendations.</li>'}</ul>
+          <ul style="margin:0;padding-left:${includePhotos ? '0' : '20px'};font-size:14px;color:#333;line-height:1.6;">${plantLines || '<li style="margin-bottom:8px;">See your Greenprint for plant recommendations.</li>'}</ul>
         </td></tr>
 
         <!-- Timeline -->
