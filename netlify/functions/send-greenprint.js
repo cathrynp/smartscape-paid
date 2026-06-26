@@ -65,7 +65,6 @@ exports.handler = async function(event) {
   try {
     if (nurseries && typeof nurseries === 'object') {
       if (nurseries.local && nurseries.local.length) {
-        nurseryHTML += '<tr><td style="background:#f0f7eb;border:1px solid #d0e8c4;border-radius:6px;padding:12px 16px;margin-bottom:8px;"><span style="font-size:12px;font-weight:700;color:#1a3a0f;letter-spacing:0.06em;text-transform:uppercase;">📍 ' + (nurseries.regionLabel || 'Your region') + '</span></td></tr>';
         nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
       }
       if (nurseries.national && nurseries.national.length) {
