@@ -1,5 +1,8 @@
 // netlify/functions/verify-code.js
 // Verifies a Gumroad license key for the Greenprint Generator Beta Access product.
+// Tracks usage count per key using Netlify Blobs — cap at 3 devices.
+
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -18,7 +21,7 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ valid: false, error: 'No code provided' }) };
   }
 
-  // Hardcoded bypass keys for beta testers
+  // Hardcoded bypass keys for beta testers — exempt from device cap
   var BYPASS_KEYS = [
     'GREENPRINT-BETA',
     'AD5A44A6-CC614F98-AA0AF0DC-DD75F64E'
@@ -45,21 +48,41 @@ exports.handler = async function (event) {
 
     var data = await resp.json();
 
-    if (data.success) {
+    if (!data.success) {
       return {
         statusCode: 200,
-        body: JSON.stringify({ valid: true })
-      };
-    } else {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ valid: false, error: 'Code not recognized' })
+        body: JSON.stringify({ valid: false, error: 'License key not recognized.' })
       };
     }
+
+    // Check and increment device count using Netlify Blobs
+    const store = getStore({ name: 'license-keys', consistency: 'strong' });
+    const existing = await store.get(code, { type: 'json' });
+    const count = existing ? existing.count : 0;
+
+    if (count >= 3) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          valid: false,
+          error: 'This license key has reached its 3-device limit. Email smartscapeapp@gmail.com for options.'
+        })
+      };
+    }
+
+    // Increment and save
+    await store.setJSON(code, { count: count + 1 });
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ valid: true })
+    };
+
   } catch (err) {
+    console.error('verify-code error:', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ valid: false, error: 'Verification service unavailable, please try again' })
+      body: JSON.stringify({ valid: false, error: 'Verification service unavailable, please try again.' })
     };
   }
 };
