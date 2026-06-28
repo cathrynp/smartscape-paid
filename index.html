@@ -408,6 +408,7 @@
         var input = document.getElementById('gate-code-input');
         var errorEl = document.getElementById('gate-error');
         var submitBtn = document.getElementById('gate-submit');
+        var code = (input ? input.value : '').trim();
         if (!code) { errorEl.textContent = 'Please enter your access code.'; return; }
         errorEl.textContent = '';
         submitBtn.textContent = 'Checking...';
