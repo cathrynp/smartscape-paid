@@ -159,14 +159,14 @@
     <div class="gate-overlay" id="gate-overlay">
         <div class="gate-box">
             <h2>Greenprint Generator</h2>
-            <p>Enter your access code to unlock your personalized native plant plan — built for your yard, your climate, your goals.</p>
-            <input type="text" id="gate-code-input" class="gate-input" placeholder="Enter your access code" autocomplete="off"/>
+            <p>Enter your license key to unlock your personalized native plant plan — built for your yard, your climate, your goals.</p>
+            <input type="text" id="gate-code-input" class="gate-input" placeholder="Enter your license key" autocomplete="off"/>
             <div class="gate-error" id="gate-error"></div>
             <button class="btn-primary" id="gate-submit" onclick="checkGateCode()">Unlock Greenprint Generator</button>
             <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code yet? Get beta access — $29.99 →</a>
             <span class="gate-resend-link" id="gate-resend-link" onclick="toggleResendForm()">Need your code resent?</span>
             <div class="gate-resend-form" id="gate-resend-form">
-                <p style="font-size:12px;color:var(--warm-gray);margin:0 0 8px;line-height:1.5;">Enter the email you used when you purchased and we'll send your access code.</p>
+                <p style="font-size:12px;color:var(--warm-gray);margin:0 0 8px;line-height:1.5;">Enter the email you used when you purchased and we'll send your license key.</p>
                 <input type="email" id="gate-resend-email" placeholder="your@email.com" autocomplete="email"/>
                 <button onclick="submitResendCode()">Send my code</button>
                 <div class="gate-resend-status" id="gate-resend-status"></div>
@@ -409,7 +409,7 @@
         var errorEl = document.getElementById('gate-error');
         var submitBtn = document.getElementById('gate-submit');
         var code = (input ? input.value : '').trim();
-        if (!code) { errorEl.textContent = 'Please enter your access code.'; return; }
+        if (!code) { errorEl.textContent = 'Please enter your license key.'; return; }
         errorEl.textContent = '';
         submitBtn.textContent = 'Checking...';
         submitBtn.disabled = true;
