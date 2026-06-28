@@ -9,13 +9,22 @@ exports.handler = async function (event) {
   let code;
   try {
     var body = JSON.parse(event.body);
-    code = (body.code || '').trim();
+    code = (body.code || '').trim().toUpperCase();
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ valid: false, error: 'Bad request' }) };
   }
 
   if (!code) {
     return { statusCode: 400, body: JSON.stringify({ valid: false, error: 'No code provided' }) };
+  }
+
+  // Hardcoded bypass keys for beta testers
+  var BYPASS_KEYS = [
+    'AD5A44A6-CC614F98-AA0AF0DC-DD75F64E'
+  ];
+
+  if (BYPASS_KEYS.indexOf(code) !== -1) {
+    return { statusCode: 200, body: JSON.stringify({ valid: true }) };
   }
 
   // Your Gumroad Product ID for "Greenprint Generator - Beta Access"
@@ -25,7 +34,7 @@ exports.handler = async function (event) {
     var params = new URLSearchParams();
     params.append('product_id', PRODUCT_ID);
     params.append('license_key', code);
-    params.append('increment_uses_count', 'false'); // don't count this as a "use" — just checking
+    params.append('increment_uses_count', 'false');
 
     var resp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
       method: 'POST',
