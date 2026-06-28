@@ -404,8 +404,8 @@
             status.textContent = 'Something went wrong. Please contact smartscapeapp@gmail.com.';
         }
     }
+    async function checkGateCode() {
         var input = document.getElementById('gate-code-input');
-        var code = input.value.trim();
         var errorEl = document.getElementById('gate-error');
         var submitBtn = document.getElementById('gate-submit');
         if (!code) { errorEl.textContent = 'Please enter your access code.'; return; }
@@ -1026,4 +1026,3 @@
     </script>
 </body>
 </html>
-
