@@ -145,6 +145,11 @@
     .gate-error { color: #cc3333; font-size: 13px; margin-bottom: 12px; min-height: 18px; }
     .gate-buy-link { display: block; margin-top: 1.5rem; font-size: 13px; color: var(--green-mid); text-decoration: none; }
     .gate-buy-link:hover { color: var(--green-deep); }
+    .gate-resend-link { display: block; margin-top: 0.75rem; font-size: 12px; color: var(--warm-gray); cursor: pointer; text-decoration: underline; }
+    .gate-resend-form { display: none; margin-top: 1rem; text-align: left; }
+    .gate-resend-form input { width: 100%; padding: 11px 14px; font-size: 14px; border: 1px solid #d8d4cc; border-radius: 8px; margin-bottom: 8px; font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+    .gate-resend-form button { width: 100%; padding: 11px; font-size: 14px; background: var(--green-mid); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .gate-resend-status { font-size: 12px; margin-top: 8px; min-height: 16px; line-height: 1.5; }
     .install-banner { display: none; background: var(--green-pale); border-bottom: 1px solid var(--green-light); padding: 10px 16px; }
     .install-banner-inner { max-width: 600px; margin: 0 auto; font-size: 12.5px; line-height: 1.5; color: var(--green-deep); overflow-wrap: break-word; word-break: break-word; }
     .install-banner-dismiss { display: inline-block; margin-top: 4px; text-decoration: underline; cursor: pointer; color: var(--green-mid); font-weight: 500; font-size: 12px; }
@@ -158,7 +163,14 @@
             <input type="text" id="gate-code-input" class="gate-input" placeholder="Enter your access code" autocomplete="off"/>
             <div class="gate-error" id="gate-error"></div>
             <button class="btn-primary" id="gate-submit" onclick="checkGateCode()">Unlock Greenprint Generator</button>
-            <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code yet? Get beta access — $19.99 →</a>
+            <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code yet? Get beta access — $29.99 →</a>
+            <span class="gate-resend-link" id="gate-resend-link" onclick="toggleResendForm()">Need your code resent?</span>
+            <div class="gate-resend-form" id="gate-resend-form">
+                <p style="font-size:12px;color:var(--warm-gray);margin:0 0 8px;line-height:1.5;">Enter the email you used when you purchased and we'll send your access code.</p>
+                <input type="email" id="gate-resend-email" placeholder="your@email.com" autocomplete="email"/>
+                <button onclick="submitResendCode()">Send my code</button>
+                <div class="gate-resend-status" id="gate-resend-status"></div>
+            </div>
             <p style="font-size:11px;color:#aaa;margin-top:12px;line-height:1.5;">Need your code resent? Email <a href="mailto:smartscapeapp@gmail.com" style="color:#2d6a1f;">smartscapeapp@gmail.com</a></p>
         </div>
     </div>
@@ -358,7 +370,41 @@
             maybeShowInstallBanner();
         }
     })();
-    async function checkGateCode() {
+    function toggleResendForm() {
+        var form = document.getElementById('gate-resend-form');
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('gate-resend-status').textContent = '';
+    }
+
+    async function submitResendCode() {
+        var email = (document.getElementById('gate-resend-email').value || '').trim();
+        var status = document.getElementById('gate-resend-status');
+        if (!email || !email.includes('@')) {
+            status.style.color = '#cc3333';
+            status.textContent = 'Please enter a valid email address.';
+            return;
+        }
+        status.style.color = 'var(--warm-gray)';
+        status.textContent = 'Looking up your purchase...';
+        try {
+            var resp = await fetch('/.netlify/functions/resend-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                status.style.color = 'var(--green-mid)';
+                status.textContent = '✓ Your access code has been sent! Check your inbox (and spam folder).';
+            } else {
+                status.style.color = '#cc3333';
+                status.textContent = data.error || 'Something went wrong. Please contact smartscapeapp@gmail.com.';
+            }
+        } catch(err) {
+            status.style.color = '#cc3333';
+            status.textContent = 'Something went wrong. Please contact smartscapeapp@gmail.com.';
+        }
+    }
         var input = document.getElementById('gate-code-input');
         var code = input.value.trim();
         var errorEl = document.getElementById('gate-error');
