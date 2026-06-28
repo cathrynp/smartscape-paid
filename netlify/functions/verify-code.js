@@ -20,6 +20,7 @@ exports.handler = async function (event) {
 
   // Hardcoded bypass keys for beta testers
   var BYPASS_KEYS = [
+    'GREENPRINT-BETA',
     'AD5A44A6-CC614F98-AA0AF0DC-DD75F64E'
   ];
 
