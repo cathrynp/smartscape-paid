@@ -74,7 +74,7 @@ exports.handler = async function(event) {
       body: JSON.stringify({
         from: 'SmartScape Greenprint <noreply@mail.smartscape.co>',
         to: [email],
-        subject: 'Your Greenprint Generator Access Code',
+        subject: 'Your Greenprint Generator License Key',
         html: `
 <!DOCTYPE html>
 <html>
@@ -85,11 +85,11 @@ exports.handler = async function(event) {
       <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <tr><td style="background:#1a3a0f;padding:28px 36px;">
           <p style="margin:0;font-size:11px;letter-spacing:0.12em;color:#c8e6b8;text-transform:uppercase;">SmartScape</p>
-          <h1 style="margin:8px 0 4px;font-size:24px;color:white;font-weight:500;">Your Access Code</h1>
+          <h1 style="margin:8px 0 4px;font-size:24px;color:white;font-weight:500;">Your License Key</h1>
           <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);">Greenprint Generator — Beta Access</p>
         </td></tr>
         <tr><td style="padding:28px 36px;">
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 20px;">Here's your Greenprint Generator access code. Copy and paste it into the access code field at the gate.</p>
+          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 20px;">Here's your Greenprint Generator license key. Copy and paste it into the license key field at the gate.</p>
           <div style="background:#f0f7eb;border:2px solid #c8e6b8;border-radius:8px;padding:20px;text-align:center;margin:0 0 24px;">
             <p style="margin:0 0 8px;font-size:11px;color:#6b8f5e;letter-spacing:0.1em;text-transform:uppercase;">Your License Key</p>
             <p style="margin:0;font-size:20px;font-weight:600;color:#1a3a0f;letter-spacing:0.05em;font-family:monospace;">${licenseKey}</p>
