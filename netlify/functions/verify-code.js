@@ -55,8 +55,14 @@ exports.handler = async function (event) {
       };
     }
 
-    // Check and increment device count using Netlify Blobs
-    const store = getStore({ name: 'license-keys', consistency: 'strong' });
+    // Initialize Blobs store inside handler with explicit credentials for Lambda compatibility
+    const store = getStore({
+      name: 'license-keys',
+      siteID: process.env.NETLIFY_SITE_ID,
+      token: process.env.NETLIFY_BLOBS_TOKEN,
+      consistency: 'strong'
+    });
+
     const existing = await store.get(code, { type: 'json' });
     const count = existing ? existing.count : 0;
 
