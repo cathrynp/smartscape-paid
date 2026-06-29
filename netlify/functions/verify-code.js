@@ -1,8 +1,6 @@
 // netlify/functions/verify-code.js
 // Verifies a Gumroad license key for the Greenprint Generator Beta Access product.
-// Tracks usage count per key using Netlify Blobs — cap at 3 devices.
-
-const { getStore } = require('@netlify/blobs');
+// Uses Gumroad's built-in uses_count to enforce a 3-device cap.
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -38,7 +36,7 @@ exports.handler = async function (event) {
     var params = new URLSearchParams();
     params.append('product_id', PRODUCT_ID);
     params.append('license_key', code);
-    params.append('increment_uses_count', 'false');
+    params.append('increment_uses_count', 'true');
 
     var resp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
       method: 'POST',
@@ -55,18 +53,9 @@ exports.handler = async function (event) {
       };
     }
 
-    // Initialize Blobs store inside handler with explicit credentials for Lambda compatibility
-    const store = getStore({
-      name: 'license-keys',
-      siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_BLOBS_TOKEN,
-      consistency: 'strong'
-    });
-
-    const existing = await store.get(code, { type: 'json' });
-    const count = existing ? existing.count : 0;
-
-    if (count >= 3) {
+    // Check Gumroad's built-in uses count — cap at 3
+    var uses = data.uses || 0;
+    if (uses > 3) {
       return {
         statusCode: 200,
         body: JSON.stringify({
@@ -75,9 +64,6 @@ exports.handler = async function (event) {
         })
       };
     }
-
-    // Increment and save
-    await store.setJSON(code, { count: count + 1 });
 
     return {
       statusCode: 200,
