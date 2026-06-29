@@ -50,7 +50,7 @@ exports.handler = async function (event) {
     if (!checkData.success) {
       return {
         statusCode: 200,
-        body: JSON.stringify({ valid: false, error: 'License key not recognized, or you've reached the 3-device limit. Email smartscapeapp@gmail.com for options.' })
+        body: JSON.stringify({ valid: false, error: 'License key not recognized, or you have reached the 3-device limit. Email smartscapeapp@gmail.com for options.' })
       };
     }
 
