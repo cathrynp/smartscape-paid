@@ -1,6 +1,6 @@
 // netlify/functions/verify-code.js
 // Verifies a Gumroad license key for the Greenprint Generator Beta Access product.
-// Uses Gumroad's built-in uses_count to enforce a 3-device cap.
+// Uses Gumroad's built-in uses count to enforce a 3-device cap.
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -33,29 +33,30 @@ exports.handler = async function (event) {
   var PRODUCT_ID = 'FNqEFzXXRqr-uM1-cgu0iQ==';
 
   try {
-    var params = new URLSearchParams();
-    params.append('product_id', PRODUCT_ID);
-    params.append('license_key', code);
-    params.append('increment_uses_count', 'true');
+    // First call WITHOUT incrementing — just to check current uses count
+    var checkParams = new URLSearchParams();
+    checkParams.append('product_id', PRODUCT_ID);
+    checkParams.append('license_key', code);
+    checkParams.append('increment_uses_count', 'false');
 
-    var resp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
+    var checkResp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
+      body: checkParams.toString()
     });
 
-    var data = await resp.json();
+    var checkData = await checkResp.json();
 
-    if (!data.success) {
+    if (!checkData.success) {
       return {
         statusCode: 200,
         body: JSON.stringify({ valid: false, error: 'License key not recognized.' })
       };
     }
 
-    // Check Gumroad's built-in uses count — cap at 3
-    var uses = data.uses_count || data.uses || 0;
-    if (uses > 3) {
+    // Check uses count BEFORE incrementing
+    var uses = checkData.uses || 0;
+    if (uses >= 3) {
       return {
         statusCode: 200,
         body: JSON.stringify({
@@ -64,6 +65,18 @@ exports.handler = async function (event) {
         })
       };
     }
+
+    // Under the limit — now increment
+    var incrParams = new URLSearchParams();
+    incrParams.append('product_id', PRODUCT_ID);
+    incrParams.append('license_key', code);
+    incrParams.append('increment_uses_count', 'true');
+
+    await fetch('https://api.gumroad.com/v2/licenses/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: incrParams.toString()
+    });
 
     return {
       statusCode: 200,
