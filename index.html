@@ -902,10 +902,10 @@
             var data = await resp.json();
             if (data.error) throw new Error(data.error.message || 'API error');
             var text = data.content && data.content[0] ? data.content[0].text : '';
-            console.log('RAW RESPONSE:', text.substring(0, 500));
             // Strip markdown bold/italic formatting that model sometimes adds to section headers
             text = text.replace(/\*{1,3}(SITE ANALYSIS|RECOMMENDED NATIVE PLANTS|PLANTING TIMELINE|SPECIES COUNT)\*{0,3}:/g, '$1:');
             text = text.replace(/\*{2,3}/g, '');
+            text = text.replace(/\*([^*]+)\*/g, '$1');
             var mismatchMatch = text.match(/PHOTO_MISMATCH:\s*(.+)/);
             if (mismatchMatch) {
                 goTo(0);
