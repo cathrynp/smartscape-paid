@@ -421,7 +421,7 @@
                 document.getElementById('gate-overlay').classList.add('hidden');
                 maybeShowInstallBanner();
             } else {
-                errorEl.textContent = 'That code wasn\'t recognized. Please check it and try again.';
+                errorEl.textContent = data.error || 'License key not recognized. Please check it and try again.';
                 submitBtn.textContent = 'Unlock Greenprint Generator';
                 submitBtn.disabled = false;
             }
