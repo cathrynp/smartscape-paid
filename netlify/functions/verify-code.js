@@ -54,7 +54,7 @@ exports.handler = async function (event) {
     }
 
     // Check Gumroad's built-in uses count — cap at 3
-    var uses = data.uses || 0;
+    var uses = data.uses_count || data.uses || 0;
     if (uses > 3) {
       return {
         statusCode: 200,
