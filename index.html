@@ -902,6 +902,7 @@
             var data = await resp.json();
             if (data.error) throw new Error(data.error.message || 'API error');
             var text = data.content && data.content[0] ? data.content[0].text : '';
+            console.log('RAW RESPONSE:', text.substring(0, 500));
             // Strip markdown bold formatting that model sometimes adds to section headers
             text = text.replace(/\*\*(SITE ANALYSIS|RECOMMENDED NATIVE PLANTS|PLANTING TIMELINE|SPECIES COUNT)(\*\*)?:/g, '$1:');
             text = text.replace(/\*\*/g, '');
