@@ -12,8 +12,8 @@ exports.handler = async function(event) {
       return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify({error:{message:'API key not configured'}})};
     }
     const requestBody={
-      model:'claude-haiku-4-5-20251001',
-      max_tokens:800,
+      model:'claude-sonnet-4-6',
+      max_tokens:2000,
       messages:incoming.messages
     };
     const response=await fetch('https://api.anthropic.com/v1/messages',{
