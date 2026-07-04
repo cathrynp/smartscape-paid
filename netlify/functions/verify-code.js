@@ -56,7 +56,7 @@ exports.handler = async function (event) {
 
     // Check uses count BEFORE incrementing
     var uses = checkData.uses || 0;
-    if (uses >= 3) {
+    if (uses >= 5) {
       return {
         statusCode: 200,
         body: JSON.stringify({
