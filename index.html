@@ -150,9 +150,9 @@
     .gate-resend-form input { width: 100%; padding: 11px 14px; font-size: 14px; border: 1px solid #d8d4cc; border-radius: 8px; margin-bottom: 8px; font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
     .gate-resend-form button { width: 100%; padding: 11px; font-size: 14px; background: var(--green-mid); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
     .gate-resend-status { font-size: 12px; margin-top: 8px; min-height: 16px; line-height: 1.5; }
-    .install-banner { display: none; background: var(--green-pale); border-bottom: 1px solid var(--green-light); padding: 10px 16px; }
-    .install-banner-inner { max-width: 600px; margin: 0 auto; font-size: 12.5px; line-height: 1.5; color: var(--green-deep); overflow-wrap: break-word; word-break: break-word; }
-    .install-banner-dismiss { display: inline-block; margin-top: 4px; text-decoration: underline; cursor: pointer; color: var(--green-mid); font-weight: 500; font-size: 12px; }
+    .install-banner { display: none; background: var(--orange, #F97316); border-bottom: 2px solid var(--green-deep); padding: 14px 16px; }
+    .install-banner-inner { max-width: 600px; margin: 0 auto; font-size: 15px; line-height: 1.5; color: #2B2B26; font-weight: 600; overflow-wrap: break-word; word-break: break-word; }
+    .install-banner-dismiss { display: inline-block; margin-top: 6px; text-decoration: underline; cursor: pointer; color: #2B2B26; font-weight: 500; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -175,7 +175,7 @@
     </div>
     <div id="install-banner" class="install-banner">
         <div class="install-banner-inner">
-            <strong>Tip:</strong> Tap <strong>Share</strong>, then <strong>"Add to Home Screen"</strong> to open Greenprint like an app.
+            📲 <strong>Tip:</strong> Tap <strong>Share</strong>, then <strong>"Add to Home Screen"</strong> to open Greenprint like an app.
             <span class="install-banner-dismiss" onclick="dismissInstallBanner()">Got it, dismiss</span>
         </div>
     </div>
