@@ -830,7 +830,16 @@
         document.getElementById('photo-mismatch-notice').style.display = 'none';
     }
     function getGoals() { var g = []; document.querySelectorAll('.goal-card.sel .goal-name').forEach(function(x) { g.push(x.textContent); }); return g.length ? g.join(', ') : 'general native landscaping'; }
+    function interleaveByType(plants) {
+        var byType = {}; var typeOrder = [];
+        plants.forEach(function(p) { if (!byType[p.type]) { byType[p.type] = []; typeOrder.push(p.type); } byType[p.type].push(p); });
+        var maxLen = 0; typeOrder.forEach(function(t) { if (byType[t].length > maxLen) maxLen = byType[t].length; });
+        var result = [];
+        for (var i = 0; i < maxLen; i++) { typeOrder.forEach(function(t) { if (byType[t][i]) result.push(byType[t][i]); }); }
+        return result;
+    }
     function drawLayout(plants, size) {
+        plants = interleaveByType(plants);
         var svg = document.getElementById('layout-svg'); var legend = document.getElementById('layout-legend');
         svg.innerHTML = ''; legend.innerHTML = '';
         var dims = {tiny:{w:280,h:220},small:{w:420,h:300},medium:{w:560,h:360},large:{w:600,h:380}};
