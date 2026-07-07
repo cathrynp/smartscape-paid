@@ -805,11 +805,25 @@
         reader.onload = function(ev) {
             var img = new Image();
             img.onload = function() {
-                var maxDim = 1200; var w = img.width, h = img.height;
-                if (w > maxDim || h > maxDim) { if (w > h) { h = Math.round(h*(maxDim/w)); w = maxDim; } else { w = Math.round(w*(maxDim/h)); h = maxDim; } }
-                var canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-                var ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
-                var dataUrl = canvas.toDataURL('image/jpeg',0.82);
+                // Netlify background functions cap the request payload at 256 KB total.
+                // Leave headroom for the JSON wrapper and prompt text, so keep the
+                // base64 photo data itself under ~180 KB (~135 KB raw JPEG bytes).
+                var MAX_BASE64_BYTES = 180000;
+                var attempts = [
+                    {maxDim:1200, q:0.82}, {maxDim:1000, q:0.75}, {maxDim:900, q:0.65},
+                    {maxDim:800, q:0.55}, {maxDim:700, q:0.5}, {maxDim:600, q:0.4}
+                ];
+                var dataUrl, w, h;
+                for (var i = 0; i < attempts.length; i++) {
+                    w = img.width; h = img.height;
+                    var maxDim = attempts[i].maxDim;
+                    if (w > maxDim || h > maxDim) { if (w > h) { h = Math.round(h*(maxDim/w)); w = maxDim; } else { w = Math.round(w*(maxDim/h)); h = maxDim; } }
+                    var canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+                    var ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+                    dataUrl = canvas.toDataURL('image/jpeg', attempts[i].q);
+                    var base64Len = dataUrl.split(',')[1].length;
+                    if (base64Len <= MAX_BASE64_BYTES || i === attempts.length - 1) break;
+                }
                 imgType = 'image/jpeg'; imgData = dataUrl.split(',')[1];
                 document.getElementById('preview-img').src = dataUrl;
                 document.getElementById('upload-area').style.display = 'none';
