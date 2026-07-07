@@ -279,7 +279,7 @@
             <div class="analyzing">
                 <div class="spin"></div>
                 <p style="font-size:16px;font-weight:500;color:var(--dark);margin-bottom:6px;">Building your Greenprint</p>
-                <p style="font-size:14px;color:var(--warm-gray);">This takes about 1–2 minutes</p>
+                <p style="font-size:14px;color:var(--warm-gray);">This takes about 1–2 minutes (up to 4 with a photo uploaded)</p>
                 <div class="analyze-steps">
                     <div class="astep" id="as0"><div class="astep-dot"></div>Analyzing site photo with Claude AI</div>
                     <div class="astep" id="as1"><div class="astep-dot"></div>Identifying USDA ecoregion for your zip code</div>
@@ -915,7 +915,7 @@
             await fetch('/.netlify/functions/generate-background', {method:'POST',headers:{'Content-Type':'application/json'},body:fetchBody});
             var pollResult = null;
             var pollAttempts = 0;
-            var maxPollAttempts = 70; // ~3 minutes at 2.5s intervals (allows for eventual-consistency propagation delay)
+            var maxPollAttempts = 100; // ~4.2 minutes at 2.5s intervals (photo uploads take longer to analyze)
             while (pollAttempts < maxPollAttempts) {
                 await new Promise(function(r) { setTimeout(r, 2500); });
                 pollAttempts++;
