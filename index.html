@@ -184,8 +184,8 @@
             <div class="hero-badge">Early Access</div>
             <h1>Your yard.<br>Your climate.<br><span>Your Greenprint.</span></h1>
             <p>SmartScape generates personalized Greenprints — the easy button for converting any American yard to climate-resilient, water-smart, pollinator-friendly native plants.</p>
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);max-width:480px;margin:-1.2rem auto 1.5rem;">Powered by Claude AI, fortified and shaped by human intelligence and expertise.</p>
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);max-width:480px;margin:-1.2rem auto 1.5rem;">A note on AI's footprint: a single Greenprint uses roughly the energy and water of a couple Google searches — small on its own. That's a real, valid concern at data-center scale, and we take it seriously.</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.5);max-width:480px;margin:-1.2rem auto 1.5rem;">Shaped and directed by SmartScape's human intelligence and expertise, powered by Claude AI.</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.5);max-width:480px;margin:-1.2rem auto 1.5rem;">A note on AI's footprint: a single Greenprint uses roughly the energy and water of a couple Google searches — small on its own. That's a real, valid concern at data-center scale, and we take it seriously — it's part of why we built a tool whose whole purpose is net-positive, where the water and habitat gains from one converted yard far outweigh the footprint of generating its Greenprint.</p>
             <div class="hero-stats">
                 <div><span class="hero-stat-num">40M+</span><span class="hero-stat-label">acres of US residential lawn</span></div>
                 <div><span class="hero-stat-num">60–80%</span><span class="hero-stat-label">water reduction possible</span></div>
@@ -293,7 +293,7 @@
             <div id="error-container"></div>
             <div class="result-header">
                 <h2 id="r-title">Your Greenprint</h2>
-                <p id="r-sub">AI-generated for your site and goals</p>
+                <p id="r-sub">Generated for your site and goals</p>
                 <div class="result-stats">
                     <div class="rstat"><span class="rstat-num">60–80%</span><span class="rstat-label">Water reduction</span></div>
                     <div class="rstat"><span class="rstat-num" id="r-count">—</span><span class="rstat-label">Native species</span></div>
@@ -324,7 +324,7 @@
             </div>
             <div class="result-card">
                 <div class="result-card-header"><h3>🏡 Native plant nurseries near you</h3><p id="r-nursery-sub">All specialize in native plants for your region</p></div>
-                <p style="font-size:12px;color:var(--warm-gray);margin:4px 0 8px;padding:0 4px;font-style:italic;">Know a great local nursery we're missing, or spot one that's closed or moved? <a href="mailto:smartscapeapp@gmail.com" style="color:var(--warm-gray);">Let us know!</a></p>
+                <p style="font-size:12px;color:var(--warm-gray);margin:4px 0 8px;padding:0 4px;font-style:italic;">Know a great local nursery we're missing, or spot one on this list that's closed or moved? <a href="mailto:smartscapeapp@gmail.com" style="color:var(--warm-gray);">Let us know!</a></p>
                 <div class="result-card-body">
                     <div class="filter-bar" id="filter-bar"></div>
                     <div id="nursery-list"></div>
@@ -965,7 +965,7 @@
             var pt = text.match(/PLANTING TIMELINE:\n([\s\S]*?)(?=SPECIES COUNT:|$)/);
             var sc = text.match(/SPECIES COUNT:\s*(\d+)/);
             document.getElementById('r-title').textContent = 'Greenprint · Zip '+zip;
-            document.getElementById('r-sub').textContent = 'AI-generated for '+sun+' · '+sizeLabel+' · Goals: '+goals;
+            document.getElementById('r-sub').textContent = 'Generated for '+sun+' · '+sizeLabel+' · Goals: '+goals;
             document.getElementById('r-rec-sub').textContent = 'Native plants matched to zip '+zip+' and your goals';
             document.getElementById('r-layout-sub').textContent = 'Suggested planting arrangement · '+sizeLabel;
             document.getElementById('r-site').textContent = sa ? sa[1].trim() : 'Site analysis complete.';
@@ -992,8 +992,10 @@
                         clean = clean.replace(/\s*Lifecycle:\s*(Perennial|Annual|Biennial)\.?/i, '');
                         var parts = clean.split('—');
                         var badge = lifecycle ? ' <span style="font-size:10px;letter-spacing:.03em;color:#6b6558;border:1px solid #ddd6c8;border-radius:10px;padding:1px 7px;">' + lifecycle + '</span>' : '';
+                        var descText = parts.slice(1).join('—').trim();
+                        descText = descText.charAt(0).toUpperCase() + descText.slice(1);
                         var nameBlock = parts.length > 1
-                            ? '<span style="font-weight:500;color:#1a3a0f;">'+parts[0].trim()+'</span>'+badge+'<br><span style="color:#6b6558;">'+parts.slice(1).join('—').trim()+'</span>'
+                            ? '<span style="font-weight:500;color:#1a3a0f;">'+parts[0].trim()+'</span>'+badge+'<br><span style="color:#6b6558;">'+descText+'</span>'
                             : '<span>'+clean+'</span>'+badge;
                         groupHtml += '<div id="plant-row-'+idx+'" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f0ede8;">'
                             + '<img id="plant-thumb-'+idx+'" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f0f0ec;display:none;"/>'
