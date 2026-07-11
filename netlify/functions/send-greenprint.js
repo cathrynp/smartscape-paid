@@ -104,8 +104,10 @@ exports.handler = async function(event) {
     const idx = plantIdx++;
     const clean = trimmed.replace(/^-\s*/, '');
     const parts = clean.split('—');
+    let descText = parts.length > 1 ? parts.slice(1).join('—').trim() : '';
+    if (descText) descText = descText.charAt(0).toUpperCase() + descText.slice(1);
     const nameHTML = parts.length > 1
-      ? parts[0].trim() + ' — ' + parts.slice(1).join('—').trim()
+      ? parts[0].trim() + ' — ' + descText
       : clean;
 
     if (includePhotos && thumbMap[idx]) {
