@@ -78,7 +78,8 @@ exports.handler = async function(event) {
   }
 
   // Parse plant lines and optionally fetch Wikipedia thumbnails
-  const rawPlantLines = (plants || '').split('\n').filter(function(l) { return l.trim(); });
+  const allLines = (plants || '').split('\n').filter(function(l) { return l.trim() && !/^\s*[-_*]{2,}\s*$/.test(l); });
+  const rawPlantLines = allLines.filter(function(l) { return l.trim().startsWith('-'); });
 
   // Build a map of idx -> thumbnail URL (only if includePhotos is true)
   const thumbMap = {};
@@ -91,15 +92,24 @@ exports.handler = async function(event) {
     }));
   }
 
-  // Render plant rows (with or without photos)
-  const plantLines = rawPlantLines.map(function(l, idx) {
-    const parts = l.split('—');
+  // Render plant rows grouped under their LAYER headers (with or without photos)
+  let plantIdx = 0;
+  const plantLines = allLines.map(function(l) {
+    const trimmed = l.trim();
+    const layerMatch = trimmed.match(/^LAYER:\s*(.+)$/i);
+    if (layerMatch) {
+      return '<tr><td style="padding:16px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#8a8473;font-weight:600;">' + layerMatch[1].trim() + '</td></tr>';
+    }
+    if (!trimmed.startsWith('-')) return '';
+    const idx = plantIdx++;
+    const clean = trimmed.replace(/^-\s*/, '');
+    const parts = clean.split('—');
     const nameHTML = parts.length > 1
       ? parts[0].trim() + ' — ' + parts.slice(1).join('—').trim()
-      : l.trim();
+      : clean;
 
     if (includePhotos && thumbMap[idx]) {
-      return '<tr><td style="padding:10px 0;border-bottom:1px solid #f0ede8;vertical-align:top;">'
+      return '<tr><td style="padding:8px 0;border-bottom:1px solid #f0ede8;vertical-align:top;">'
         + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
         + '<td style="width:72px;vertical-align:top;padding-right:12px;">'
         + '<img src="' + thumbMap[idx] + '" alt="" width="64" height="64" style="width:64px;height:64px;object-fit:cover;border-radius:8px;display:block;border:1px solid #e0ddd6;"/>'
@@ -108,16 +118,13 @@ exports.handler = async function(event) {
         + '</tr></table>'
         + '</td></tr>';
     }
-    return '<tr><td style="padding:10px 0;border-bottom:1px solid #f0ede8;font-size:14px;color:#333;line-height:1.6;">'
-      + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-      + '<td style="width:72px;vertical-align:top;padding-right:12px;"></td>'
-      + '<td style="vertical-align:middle;">' + nameHTML + '</td>'
-      + '</tr></table>'
+    return '<tr><td style="padding:8px 0;border-bottom:1px solid #f0ede8;font-size:14px;color:#333;line-height:1.6;">'
+      + nameHTML
       + '</td></tr>';
   }).join('');
 
   // Format timeline lines: group bullet items under plain-text season headers
-  const rawTimeLines = (timeline || '').split('\n').map(function(l) { return l.replace(/\*\*/g, '').trim(); }).filter(function(l) { return l; });
+  const rawTimeLines = (timeline || '').split('\n').map(function(l) { return l.replace(/\*\*/g, '').trim(); }).filter(function(l) { return l && !/^\s*[-_*]{2,}\s*$/.test(l); });
   const seasonHeaderRe = /^[-*•\s]*((Fall|Winter|Spring|Summer)\s*\([^)]*\))\s*:?\s*$/i;
   const seasonBlocks = [];
   let curBlock = null;
@@ -184,7 +191,7 @@ exports.handler = async function(event) {
         <!-- Footer -->
         <tr><td style="padding:28px 36px;background:#f0f7eb;margin-top:24px;">
           <p style="margin:0 0 8px;font-size:12px;color:#5a7052;line-height:1.6;">Your Greenprint's plant recommendations are shaped and directed by real native-plant expertise, powered by Claude AI. Your local nursery is a great resource too — they can confirm current availability and answer any site-specific questions.</p>
-          <p style="margin:0;font-size:12px;color:#5a7052;">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#2d6a1f;">SmartScape</a> ✨AI For Good · Early Access 2026 · Shaped and directed by SmartScape's human intelligence and expertise, powered by Claude AI</p>
+          <p style="margin:0;font-size:12px;color:#5a7052;">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#2d6a1f;">SmartScape</a> ✨AI For Good · Early Access 2026</p>
         </td></tr>
 
       </table>
