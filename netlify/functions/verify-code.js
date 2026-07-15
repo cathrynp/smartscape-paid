@@ -2,6 +2,8 @@
 // Verifies a Gumroad license key for the Greenprint Generator Beta Access product.
 // Uses Gumroad's built-in uses count to enforce a 3-device cap.
 
+const { getStore } = require('@netlify/blobs');
+
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ valid: false, error: 'Method not allowed' }) };
@@ -17,6 +19,30 @@ exports.handler = async function (event) {
 
   if (!code) {
     return { statusCode: 400, body: JSON.stringify({ valid: false, error: 'No code provided' }) };
+  }
+
+  // Capped promo codes — total redemptions tracked via Netlify Blobs, matching the
+  // usage limits set on their Gumroad discount codes (VIPACCESS 13, EARLYACCESS 42)
+  var BYPASS_LIMITS = {
+    'VIPACCESS': 13,
+    'EARLYACCESS': 42
+  };
+
+  if (BYPASS_LIMITS.hasOwnProperty(code)) {
+    var limit = BYPASS_LIMITS[code];
+    var store = getStore('promo-usage');
+    var record = await store.get(code, { type: 'json' });
+    var count = (record && record.count) || 0;
+
+    if (count >= limit) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ valid: false, error: 'This promo code has reached its usage limit. Email smartscapeapp@gmail.com for options.' })
+      };
+    }
+
+    await store.setJSON(code, { count: count + 1 });
+    return { statusCode: 200, body: JSON.stringify({ valid: true }) };
   }
 
   // Hardcoded bypass keys for beta testers — exempt from device cap
