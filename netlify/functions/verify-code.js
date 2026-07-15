@@ -30,7 +30,13 @@ exports.handler = async function (event) {
 
   if (BYPASS_LIMITS.hasOwnProperty(code)) {
     var limit = BYPASS_LIMITS[code];
-    var store = getStore('promo-usage');
+    // Explicitly pass siteID and token so Blobs works regardless of automatic
+    // environment injection (fixes MissingBlobsEnvironmentError).
+    var store = getStore({
+      name: 'promo-usage',
+      siteID: '58059f0f-bc4f-4cec-8963-b609550a12e6',
+      token: process.env.BLOBS_TOKEN
+    });
     var record = await store.get(code, { type: 'json' });
     var count = (record && record.count) || 0;
 
