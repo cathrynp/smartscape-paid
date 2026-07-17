@@ -159,10 +159,16 @@ exports.handler = async function(event) {
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
         <!-- Header -->
-        <tr><td style="background:#1a3a0f;padding:32px 36px;">
-          <p style="margin:0;font-size:11px;letter-spacing:0.12em;color:#c8e6b8;text-transform:uppercase;">SmartScape</p>
-          <h1 style="margin:8px 0 4px;font-size:28px;color:white;font-weight:500;">Your Greenprint</h1>
-          <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);">Native plant plan for zip code ${zip || 'your area'}</p>
+        <tr><td style="background-color:#1a3a0f;background-image:url('https://greenprint-subscriber.netlify.app/email-header-watercolor.jpg');background-size:cover;background-position:center;padding:32px 36px;">
+          <div style="margin:0 0 10px;">
+            <span style="display:inline-block;margin:0;font-size:11px;letter-spacing:0.12em;color:#000;text-transform:uppercase;font-weight:700;background:rgba(79,143,136,0.65);padding:4px 12px;border-radius:3px;">SmartScape</span>
+          </div>
+          <div style="margin:0 0 6px;">
+            <span style="display:inline-block;font-size:28px;color:#fff;font-weight:500;line-height:1.2;background:rgba(79,143,136,0.65);padding:6px 14px;border-radius:3px;">Your Greenprint</span>
+          </div>
+          <div style="margin:0;">
+            <span style="display:inline-block;font-size:14px;color:#fff;background:rgba(79,143,136,0.65);padding:5px 12px;border-radius:3px;">Native plant plan for zip code ${zip || 'your area'}</span>
+          </div>
         </td></tr>
 
         <!-- Site Analysis -->
