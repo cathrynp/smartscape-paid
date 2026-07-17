@@ -49,7 +49,7 @@ exports.handler = async function(event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request' }) };
   }
 
-  const { email, zip, siteAnalysis, plants, timeline, nurseries, includePhotos } = body;
+  const { email, zip, siteAnalysis, summaryLine, plants, timeline, nurseries, includePhotos } = body;
 
   if (!email || !email.includes('@')) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid email' }) };
@@ -173,6 +173,7 @@ exports.handler = async function(event) {
 
         <!-- Site Analysis -->
         <tr><td style="padding:28px 36px 0;">
+          ${summaryLine ? `<p style="margin:0 0 20px;font-size:13px;color:#5a7052;font-style:italic;">${summaryLine}</p>` : ''}
           <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #c8e6b8;padding-bottom:8px;">🔍 Site Analysis</h2>
           <p style="margin:0;font-size:14px;color:#333;line-height:1.7;">${(siteAnalysis || '').replace(/\n/g, '<br>')}</p>
         </td></tr>
@@ -197,9 +198,10 @@ exports.handler = async function(event) {
         </td></tr>` : ''}
 
         <!-- Footer -->
-        <tr><td style="padding:28px 36px;background:#f0f7eb;margin-top:24px;">
-          <p style="margin:0 0 8px;font-size:12px;color:#5a7052;line-height:1.6;">Your Greenprint's plant recommendations are shaped and directed by real native-plant expertise, powered by Claude AI. Your local nursery is a great resource too — they can confirm current availability and answer any site-specific questions.</p>
-          <p style="margin:0;font-size:12px;color:#5a7052;">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#2d6a1f;">SmartScape</a> ✨AI For Good · Early Access 2026</p>
+        <tr><td style="padding:28px 36px;background:#4F8F88;">
+          <p style="margin:0 0 8px;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.6;">Your Greenprint's plant recommendations are shaped and directed by real native-plant expertise, powered by Claude AI. Your local nursery is a great resource too — they can confirm current availability and answer any site-specific questions.</p>
+          <p style="margin:0 0 14px;font-size:12px;color:rgba(255,255,255,0.85);">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#fff;font-weight:600;">SmartScape</a> ✨AI For Good · Early Access 2026</p>
+          <p style="margin:0;font-size:12px;color:#fff;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">Know someone who could use this? You can gift them a Greenprint of their own — <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="color:#fff;font-weight:600;text-decoration:underline;">send one here →</a></p>
         </td></tr>
 
       </table>
