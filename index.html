@@ -1094,6 +1094,7 @@
         if (!email || !email.includes('@')) { statusEl.style.color = '#cc3333'; statusEl.textContent = 'Please enter a valid email address.'; return; }
         statusEl.style.color = 'var(--warm-gray)'; statusEl.textContent = 'Sending...'; btn.disabled = true; btn.textContent = 'Sending...';
         var siteText = document.getElementById('r-site') ? document.getElementById('r-site').textContent : '';
+        var summaryLine = document.getElementById('r-sub') ? document.getElementById('r-sub').textContent : '';
         var plantsEl = document.getElementById('r-plants'); var plantsText = window._lastPlantsRaw || (plantsEl ? plantsEl.innerText : '');
         var timeEl = document.getElementById('r-time'); var timeText = timeEl ? timeEl.innerText : '';
         var zip = currentZip || '';
@@ -1105,7 +1106,7 @@
         var includePhotos = document.getElementById('include-photos-checkbox') ? document.getElementById('include-photos-checkbox').checked : false;
         fetch('/.netlify/functions/send-greenprint', {
             method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ email: email, zip: zip, siteAnalysis: siteText, plants: plantsText, timeline: timeText, nurseries: nurseryData, includePhotos: includePhotos })
+            body: JSON.stringify({ email: email, zip: zip, siteAnalysis: siteText, summaryLine: summaryLine, plants: plantsText, timeline: timeText, nurseries: nurseryData, includePhotos: includePhotos })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
