@@ -56,7 +56,7 @@ exports.handler = async function(event) {
         nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
       }
       if (nurseries.national && nurseries.national.length) {
-        nurseryHTML += '<tr><td style="padding:16px 0 4px;"><h3 style="margin:0 0 2px;font-size:14px;color:#1a3a0f;border-bottom:2px solid #4F8F88;padding-bottom:6px;">🚚 Order online — Nurseries that ship nationwide</h3></td></tr>';
+        nurseryHTML += '<tr><td style="padding:16px 0 4px;"><h3 style="margin:0 0 2px;font-size:14px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:6px;">🚚 Order online — Nurseries that ship nationwide</h3></td></tr>';
         nurseryHTML += nurseries.national.map(renderNurseryRow).join('');
       }
     }
@@ -162,31 +162,31 @@ exports.handler = async function(event) {
         <!-- Site Analysis -->
         <tr><td style="padding:28px 36px 0;">
           ${summaryLine ? `<p style="margin:0 0 20px;font-size:13px;color:#5a7052;font-style:italic;">${summaryLine}</p>` : ''}
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4F8F88;padding-bottom:8px;">🔍 Site Analysis</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">🔍 Site Analysis</h2>
           <p style="margin:0;font-size:14px;color:#333;line-height:1.7;">${(siteAnalysis || '').replace(/\n/g, '<br>')}</p>
         </td></tr>
 
         <!-- Plants -->
         <tr><td style="padding:24px 36px 0;">
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4F8F88;padding-bottom:8px;">🌱 Recommended Native Plants</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">🌱 Recommended Native Plants</h2>
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">${plantLines || '<tr><td style="padding:10px 0;font-size:14px;color:#333;">See your Greenprint for plant recommendations.</td></tr>'}</table>
         </td></tr>
 
         <!-- Timeline -->
         <tr><td style="padding:24px 36px 0;">
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4F8F88;padding-bottom:8px;">📅 Planting Timeline</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">📅 Planting Timeline</h2>
           <div style="font-size:14px;color:#333;line-height:1.6;">${timeLines || '<p>See your Greenprint for timeline details.</p>'}</div>
         </td></tr>
 
         <!-- Nurseries -->
         ${nurseryHTML ? `
         <tr><td style="padding:24px 36px 0;">
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4F8F88;padding-bottom:8px;">🏡 Native Plant Nurseries Near You</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">🏡 Native Plant Nurseries Near You</h2>
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">${nurseryHTML}</table>
         </td></tr>` : ''}
 
         <!-- Footer -->
-        <tr><td style="padding:28px 36px;background:#4F8F88;">
+        <tr><td style="padding:28px 36px;background:#1a3a0f;">
           <p style="margin:0 0 8px;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.6;">Your Greenprint's plant recommendations are shaped and directed by real native-plant expertise, powered by Claude AI. Your local nursery is a great resource too — they can confirm current availability and answer any site-specific questions.</p>
           <p style="margin:0 0 14px;font-size:12px;color:rgba(255,255,255,0.85);">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#fff;font-weight:600;">SmartScape</a> ✨AI For Good · Early Access 2026</p>
           <p style="margin:0;font-size:12px;color:#fff;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">Know someone who could use this? You can gift them a Greenprint of their own — <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="color:#fff;font-weight:600;text-decoration:underline;">send one here</a></p>
