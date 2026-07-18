@@ -56,7 +56,7 @@ exports.handler = async function(event) {
         nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
       }
       if (nurseries.national && nurseries.national.length) {
-        nurseryHTML += '<tr><td style="background:#4F8F88;border-radius:6px;padding:12px 16px;margin-top:8px;margin-bottom:8px;"><span style="font-size:12px;font-weight:700;color:#fff;letter-spacing:0.06em;text-transform:uppercase;">🚚 Order online — Nurseries that ship nationwide</span></td></tr>';
+        nurseryHTML += '<tr><td style="padding:16px 0 4px;"><h3 style="margin:0 0 2px;font-size:14px;color:#1a3a0f;border-bottom:2px solid #4F8F88;padding-bottom:6px;">🚚 Order online — Nurseries that ship nationwide</h3></td></tr>';
         nurseryHTML += nurseries.national.map(renderNurseryRow).join('');
       }
     }
