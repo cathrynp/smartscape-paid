@@ -56,7 +56,7 @@ exports.handler = async function(event) {
         nurseryHTML += nurseries.local.map(renderNurseryRow).join('');
       }
       if (nurseries.national && nurseries.national.length) {
-        nurseryHTML += '<tr><td style="padding:16px 0 4px;"><h3 style="margin:0 0 2px;font-size:14px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:6px;">🚚 Order online — Nurseries that ship nationwide</h3></td></tr>';
+        nurseryHTML += '<tr><td style="padding:16px 0 4px;"><h3 style="margin:0 0 2px;font-size:14px;color:#1a3a0f;border-bottom:2px solid #4C9964;padding-bottom:6px;">🚚 Order online — Nurseries that ship nationwide</h3></td></tr>';
         nurseryHTML += nurseries.national.map(renderNurseryRow).join('');
       }
     }
@@ -162,26 +162,26 @@ exports.handler = async function(event) {
         <!-- Site Analysis -->
         <tr><td style="padding:28px 36px 0;">
           ${summaryLine ? `<p style="margin:0 0 20px;font-size:13px;color:#5a7052;font-style:italic;">${summaryLine}</p>` : ''}
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">🔍 Site Analysis</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4C9964;padding-bottom:8px;">🔍 Site Analysis</h2>
           <p style="margin:0;font-size:14px;color:#333;line-height:1.7;">${(siteAnalysis || '').replace(/\n/g, '<br>')}</p>
         </td></tr>
 
         <!-- Plants -->
         <tr><td style="padding:24px 36px 0;">
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">🌱 Recommended Native Plants</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4C9964;padding-bottom:8px;">🌱 Recommended Native Plants</h2>
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">${plantLines || '<tr><td style="padding:10px 0;font-size:14px;color:#333;">See your Greenprint for plant recommendations.</td></tr>'}</table>
         </td></tr>
 
         <!-- Timeline -->
         <tr><td style="padding:24px 36px 0;">
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">📅 Planting Timeline</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4C9964;padding-bottom:8px;">📅 Planting Timeline</h2>
           <div style="font-size:14px;color:#333;line-height:1.6;">${timeLines || '<p>See your Greenprint for timeline details.</p>'}</div>
         </td></tr>
 
         <!-- Nurseries -->
         ${nurseryHTML ? `
         <tr><td style="padding:24px 36px 0;">
-          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #5FA60C;padding-bottom:8px;">🏡 Native Plant Nurseries Near You</h2>
+          <h2 style="margin:0 0 12px;font-size:16px;color:#1a3a0f;border-bottom:2px solid #4C9964;padding-bottom:8px;">🏡 Native Plant Nurseries Near You</h2>
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">${nurseryHTML}</table>
         </td></tr>` : ''}
 
