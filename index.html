@@ -455,7 +455,7 @@
             if (saved) {
                 var snap = JSON.parse(saved);
                 currentZip = snap.zip; yardSize = snap.yardSize; userLat = snap.userLat; userLng = snap.userLng;
-                renderGreenprintResult(snap.text, snap.zip, snap.sun, snap.sizeLabel, snap.goals);
+                renderGreenprintResult(snap.text, snap.zip, snap.sun, snap.sizeLabel, snap.goals, snap.elevationText);
                 buildFilters(); renderNurseries('all'); goTo(3);
             }
         } catch(e) { console.log('Could not restore saved Greenprint:', e.message); }
@@ -788,7 +788,7 @@
         document.getElementById('r-nursery-sub').textContent = local.length ? local.length + ' local nurseries near zip ' + currentZip + ' — carry native plants for your region' : 'No local nurseries in our database yet for this region — national mail-order options below ship anywhere in the US';
         var html = '';
         if (showLocal.length) { html += showLocal.map(renderRow).join(''); }
-        if (showNat.length) { html += '<div class="region-label" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + '">🚚 Order Online — Nurseries That Ship Nationwide</div>'; html += showNat.map(renderRow).join(''); }
+        if (showNat.length) { html += '<div class="result-card-header" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + ';border-radius:8px;"><h3>🚚 Order online</h3><p>Nurseries that ship nationwide</p></div>'; html += showNat.map(renderRow).join(''); }
         if (!html) html = '<p style="font-size:13px;color:#aaa;">No results — try "All".</p>';
         document.getElementById('nursery-list').innerHTML = html;
     }
@@ -909,13 +909,13 @@
             return {name:name.substring(0,22),color:PLANT_COLORS[i%PLANT_COLORS.length],r:sizes[type],type:type};
         });
     }
-    function renderGreenprintResult(text, zip, sun, sizeLabel, goals) {
+    function renderGreenprintResult(text, zip, sun, sizeLabel, goals, elevationText) {
             var sa = text.match(/SITE ANALYSIS:\n([\s\S]*?)(?=RECOMMENDED NATIVE PLANTS:|$)/);
             var rp = text.match(/RECOMMENDED NATIVE PLANTS:\n([\s\S]*?)(?=PLANTING TIMELINE:|$)/);
             var pt = text.match(/PLANTING TIMELINE:\n([\s\S]*?)(?=SPECIES COUNT:|$)/);
             var sc = text.match(/SPECIES COUNT:\s*(\d+)/);
             document.getElementById('r-title').textContent = 'Greenprint · Zip '+zip;
-            document.getElementById('r-sub').textContent = 'Generated for '+sun+' · '+sizeLabel+' · Goals: '+goals;
+            document.getElementById('r-sub').textContent = 'Generated for '+sun+' · '+sizeLabel+(elevationText ? ' · '+elevationText : '')+' · Goals: '+goals;
             document.getElementById('r-rec-sub').textContent = 'Native plants matched to zip '+zip+' and your goals';
             document.getElementById('r-layout-sub').textContent = 'Suggested planting arrangement · '+sizeLabel;
             document.getElementById('r-site').textContent = sa ? sa[1].trim() : 'Site analysis complete.';
@@ -1002,10 +1002,10 @@
             var emailBox = document.getElementById('email-greenprint-box'); if (emailBox) emailBox.style.display = 'block';
             if (rp) { var plants = parsePlants(rp[1]); drawLayout(plants, yardSize); }
     }
-    function saveGreenprintSnapshot(text, zip, sun, sizeLabel, goals) {
+    function saveGreenprintSnapshot(text, zip, sun, sizeLabel, goals, elevationText) {
         try {
             localStorage.setItem('smartscape_last_greenprint', JSON.stringify({
-                text: text, zip: zip, sun: sun, sizeLabel: sizeLabel, goals: goals,
+                text: text, zip: zip, sun: sun, sizeLabel: sizeLabel, goals: goals, elevationText: elevationText,
                 yardSize: yardSize, userLat: userLat, userLng: userLng
             }));
         } catch(e) { console.log('Could not save Greenprint snapshot:', e.message); }
@@ -1020,6 +1020,7 @@
         var elevationEl = document.getElementById('elevation');
         var elevation = elevationEl ? elevationEl.value : '';
         var elevationLine = elevation ? '- Elevation: ' + elevationEl.options[elevationEl.selectedIndex].text + '\n' : '';
+        var elevationText = elevationEl ? elevationEl.options[elevationEl.selectedIndex].text : '';
         var goals = getGoals();
         goTo(2);
         [0,1,2,3,4].forEach(function(i) { setTimeout(function() { var el = document.getElementById('as'+i); if (el) el.classList.add('on'); }, 500 + i*4000); });
@@ -1073,14 +1074,14 @@
                 var fi = document.getElementById('file-input'); if (fi) fi.value = '';
                 return;
             }
-            renderGreenprintResult(text, zip, sun, sizeLabel, goals);
-            saveGreenprintSnapshot(text, zip, sun, sizeLabel, goals);
+            renderGreenprintResult(text, zip, sun, sizeLabel, goals, elevationText);
+            saveGreenprintSnapshot(text, zip, sun, sizeLabel, goals, elevationText);
             fetch('/.netlify/functions/log-greenprint', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     zip: zip, goals: goals, sizeLabel: sizeLabel, sun: sun,
-                    elevation: elevationEl ? elevationEl.options[elevationEl.selectedIndex].text : ''
+                    elevation: elevationText
                 })
             }).catch(function(e) { console.log('Greenprint log failed (non-blocking):', e.message); });
         } catch(err) {
