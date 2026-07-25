@@ -16,7 +16,7 @@ exports.handler = async function(event) {
 
     const requestBody = {
       model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
+      max_tokens: 3500,
       messages: incoming.messages
     };
 
@@ -26,6 +26,15 @@ exports.handler = async function(event) {
         return (parsed.content && parsed.content[0] && parsed.content[0].text) || '';
       } catch (e) {
         return '';
+      }
+    }
+
+    function wasTruncated(rawResponseText) {
+      try {
+        const parsed = JSON.parse(rawResponseText);
+        return parsed.stop_reason === 'max_tokens';
+      } catch (e) {
+        return false;
       }
     }
 
@@ -51,15 +60,19 @@ exports.handler = async function(event) {
     let text = await response.text();
     console.log('Anthropic status:', response.status, 'response:', text.substring(0, 300));
 
-    // Reliability check: PLANTING TIMELINE must include all 4 seasons. Retry once if any are missing.
+    // Reliability check: response must not be cut off, and PLANTING TIMELINE must include all 4 seasons. Retry once if either fails.
     if (response.status === 200) {
+      const truncated = wasTruncated(text);
       const missing = missingSeasons(extractAssistantText(text));
-      if (missing.length > 0) {
-        console.log('Missing season(s) in first attempt:', missing.join(', '), '— retrying once.');
+      if (truncated || missing.length > 0) {
+        const reason = truncated
+          ? 'Your previous response above was cut off before it finished (it ran out of space partway through, most likely during the PLANTING TIMELINE section).'
+          : 'Your PLANTING TIMELINE above is missing the following required season(s): ' + missing.join(', ') + '.';
+        console.log(truncated ? 'Response was truncated (stop_reason: max_tokens) — retrying once.' : 'Missing season(s) in first attempt: ' + missing.join(', ') + ' — retrying once.');
         const priorAssistantText = extractAssistantText(text);
         const retryMessages = incoming.messages.concat([
           { role: 'assistant', content: priorAssistantText },
-          { role: 'user', content: 'Your PLANTING TIMELINE above is missing the following required season(s): ' + missing.join(', ') + '. Provide your complete full response again in the exact same format, but this time include ALL FOUR seasons (Fall, Winter, Spring, Summer) as separate headers, each with at least one bullet — even if a season is maintenance-only, it must still appear with its own header and content.' }
+          { role: 'user', content: reason + ' Provide your complete full response again in the exact same format, but this time keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response, including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, fits completely. Even if a season is maintenance-only, it must still appear with its own header and content.' }
         ]);
         const retryResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -68,14 +81,14 @@ exports.handler = async function(event) {
             'x-api-key': API_KEY,
             'anthropic-version': '2023-06-01'
           },
-          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, messages: retryMessages })
+          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 3500, messages: retryMessages })
         });
         const retryText = await retryResponse.text();
         console.log('Retry status:', retryResponse.status, 'response:', retryText.substring(0, 300));
-        if (retryResponse.status === 200 && missingSeasons(extractAssistantText(retryText)).length === 0) {
+        if (retryResponse.status === 200 && !wasTruncated(retryText) && missingSeasons(extractAssistantText(retryText)).length === 0) {
           text = retryText;
         } else {
-          console.log('Retry still missing season(s) or failed; keeping original response.');
+          console.log('Retry still truncated, still missing season(s), or failed; keeping original response.');
         }
       }
     }
