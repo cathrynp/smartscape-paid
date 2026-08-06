@@ -1,4 +1,7 @@
 function renderNurseryRow(n) {
+  const linkHtml = n.url
+    ? '<a href="' + n.url + '" style="font-size:12px;color:#2d6a1f;font-weight:500;text-decoration:none;">Visit →</a>'
+    : '<span style="font-size:12px;color:#6b6558;font-weight:500;">' + (n.phone || 'Call to visit') + '</span>';
   return '<tr><td style="padding:10px 0;border-bottom:1px solid #f0ede8;">' +
     '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
     '<td style="vertical-align:top;">' +
@@ -6,7 +9,7 @@ function renderNurseryRow(n) {
     '<div style="font-size:12px;color:#6b6558;margin-top:2px;line-height:1.45;">' + (n.city || '') + ', ' + (n.state || '') + ' — ' + (n.desc || '') + '</div>' +
     '</td>' +
     '<td style="vertical-align:top;text-align:right;white-space:nowrap;padding-left:12px;">' +
-    '<a href="' + (n.url || '#') + '" style="font-size:12px;color:#2d6a1f;font-weight:500;text-decoration:none;">Visit →</a>' +
+    linkHtml +
     '</td></tr></table>' +
     '</td></tr>';
 }
