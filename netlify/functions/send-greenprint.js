@@ -189,7 +189,7 @@ exports.handler = async function(event) {
         <tr><td style="padding:28px 36px;background:#1a3a0f;">
           <p style="margin:0 0 8px;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.6;">Your Greenprint's plant recommendations are shaped and directed by real native-plant expertise, powered by Claude AI. Your local nursery is a great resource too — they can confirm current availability and answer any site-specific questions.</p>
           <p style="margin:0 0 14px;font-size:12px;color:rgba(255,255,255,0.85);">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#fff;font-weight:600;">SmartScape</a> ✨AI For Good · Early Access 2026</p>
-          <p style="margin:0;font-size:12px;color:#fff;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">Know someone who could use this? You can gift them a Greenprint of their own — <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="color:#fff;font-weight:600;text-decoration:underline;">send one here</a></p>
+          <p style="margin:0;font-size:12px;color:#fff;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">Know someone who could use this? <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="color:#fff;font-weight:600;text-decoration:underline;">You can gift them the tool that made this — here</a></p>
         </td></tr>
 
       </table>
