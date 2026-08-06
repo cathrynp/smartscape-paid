@@ -948,9 +948,9 @@
                         descText = descText.charAt(0).toUpperCase() + descText.slice(1);
                         var usdaPlaceholder = '<span id="plant-usda-'+idx+'"></span>';
                         var nameBlock = parts.length > 1
-                            ? '<span style="font-weight:500;color:#1a3a0f;">'+parts[0].trim()+'</span>'+badge+'<br><span style="color:#6b6558;">'+descText+'</span>'+usdaPlaceholder
+                            ? '<span style="font-weight:600;font-size:15px;color:#1a3a0f;">'+parts[0].trim()+'</span>'+badge+'<br><span style="color:#6b6558;display:inline-block;margin-top:3px;">'+descText+'</span>'+usdaPlaceholder
                             : '<span>'+clean+'</span>'+badge+usdaPlaceholder;
-                        groupHtml += '<div id="plant-row-'+idx+'" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f0ede8;">'
+                        groupHtml += '<div id="plant-row-'+idx+'" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #ddd6c8;">'
                             + '<img id="plant-thumb-'+idx+'" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f0f0ec;display:none;"/>'
                             + '<div style="flex:1;min-width:0;">'+nameBlock+'</div>'
                             + '</div>';
