@@ -95,11 +95,11 @@ exports.handler = async function(event) {
     let descText = parts.length > 1 ? parts.slice(1).join('—').trim() : '';
     if (descText) descText = descText.charAt(0).toUpperCase() + descText.slice(1);
     const nameHTML = parts.length > 1
-      ? parts[0].trim() + ' — ' + descText
+      ? '<div style="font-weight:600;font-size:15px;color:#1a3a0f;">' + parts[0].trim() + '</div><div style="color:#333;margin-top:3px;">' + descText + '</div>'
       : clean;
 
     if (includePhotos && thumbMap[idx]) {
-      return '<tr><td style="padding:8px 0;border-bottom:1px solid #f0ede8;vertical-align:top;">'
+      return '<tr><td style="padding:8px 0;border-bottom:1px solid #ddd6c8;vertical-align:top;">'
         + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
         + '<td style="width:72px;vertical-align:top;padding-right:12px;">'
         + '<img src="' + thumbMap[idx] + '" alt="" width="64" height="64" style="width:64px;height:64px;object-fit:cover;border-radius:8px;display:block;border:1px solid #e0ddd6;"/>'
@@ -108,7 +108,7 @@ exports.handler = async function(event) {
         + '</tr></table>'
         + '</td></tr>';
     }
-    return '<tr><td style="padding:8px 0;border-bottom:1px solid #f0ede8;font-size:14px;color:#333;line-height:1.6;">'
+    return '<tr><td style="padding:8px 0;border-bottom:1px solid #ddd6c8;font-size:14px;color:#333;line-height:1.6;">'
       + nameHTML
       + '</td></tr>';
   }).join('');
