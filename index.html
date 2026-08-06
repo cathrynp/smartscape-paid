@@ -571,9 +571,9 @@
     {name:"Kentucky Native Plant Society",city:"Statewide",state:"KY",lat:38.20,lng:-84.87,regions:["ky"],url:"https://knps.org",desc:"Best source for seasonal native plant sales across Kentucky.",tags:["resource","events"]},
     {name:"Ancient Roots Native Nursery",city:"Poseyville",state:"IN",lat:38.17,lng:-87.78,regions:["ky","in"],url:"https://ancientrootsnativenursery.com",desc:"Family-owned. Flowers, grasses, vines, shrubs, trees. All true Midwest natives. Ships.",tags:["retail","ships"]},
     {name:"West Virginia Native Plant Society",city:"Statewide",state:"WV",lat:38.35,lng:-81.63,regions:["wv"],url:"https://wvnps.org",desc:"Best resource for WV native plant sources and seasonal plant sales.",tags:["resource","events"]},
-    {name:"Winston Gardens Nursery",city:"Martinsburg",state:"WV",lat:39.46,lng:-77.96,regions:["wv","va","pa"],url:"https://winstongardensnursery.com",desc:"30+ varieties of native trees and shrubs, potted for immediate planting.",tags:["retail"]},
-    {name:"Earth Sangha Wild Plant Nursery",city:"Springfield",state:"VA",lat:38.79,lng:-77.19,regions:["va"],url:"https://earthsangha.org/nursery",desc:"Unique resource for ecological restoration in the greater Washington DC area.",tags:["retail","wholesale"]},
-    {name:"Chesapeake Natives",city:"Upper Marlboro",state:"MD",lat:38.82,lng:-76.75,regions:["va","pa"],url:"https://chesapeakenatives.com",desc:"Native plants for the Mid-Atlantic region. Retail and wholesale.",tags:["retail","wholesale"]},
+    {name:"Winston Gardens Nursery",city:"Martinsburg",state:"WV",lat:39.46,lng:-77.96,regions:["wv","va","pa"],phone:"304-264-4783",desc:"30+ varieties of native trees and shrubs, potted for immediate planting. Phone/visit only — no website.",tags:["retail"]},
+    {name:"Earth Sangha Wild Plant Nursery",city:"Springfield",state:"VA",lat:38.79,lng:-77.19,regions:["va"],url:"https://www.earthsangha.org/wpn",desc:"Unique resource for ecological restoration in the greater Washington DC area.",tags:["retail","wholesale"]},
+    {name:"Chesapeake Natives",city:"Upper Marlboro",state:"MD",lat:38.82,lng:-76.75,regions:["va","pa"],url:"https://www.chesapeakenatives.org",desc:"Native plants for the Mid-Atlantic region. Retail and wholesale.",tags:["retail","wholesale"]},
     {name:"Bowman's Hill Wildflower Preserve Nursery",city:"New Hope",state:"PA",lat:40.38,lng:-74.96,regions:["pa"],url:"https://bhwp.org",desc:"All native plants, many grown from seed on site. Expert staff.",tags:["retail"]},
     {name:"North Creek Nurseries",city:"Landenberg",state:"PA",lat:39.74,lng:-75.79,regions:["pa"],url:"https://northcreeknurseries.com",desc:"Wholesale native plant propagation. Eastern US native perennials, grasses, ferns and shrubs.",tags:["wholesale"]},
     {name:"Native Plant Center at SUNY",city:"Valhalla",state:"NY",lat:41.08,lng:-73.77,regions:["ny"],url:"https://nativeplantcenter.org",desc:"Native plants of the Northeast. Annual plant sale, expert resources, and regional plant lists.",tags:["retail","resource","events"]},
@@ -593,7 +593,7 @@
     {name:"Broken Arrow Nursery",city:"Hamden",state:"CT",lat:41.40,lng:-72.90,regions:["ct"],url:"https://brokenarrownursery.com",desc:"Well-regarded CT nursery with strong native plant selection including rare and unusual natives.",tags:["retail"]},
     {name:"Catskill Native Nursery",city:"Kerhonkson",state:"NY",lat:41.77,lng:-74.30,regions:["ny"],url:"https://catskillnativenursery.com",desc:"Native plants of the Catskills and Hudson Valley. Wide selection of trees, shrubs, and perennials.",tags:["retail"]},
     {name:"Triple Oaks Nursery",city:"Franklinville",state:"NJ",lat:39.61,lng:-75.08,regions:["ny"],url:"https://tripleoaksnursery.com",desc:"South Jersey native plants. Trees, shrubs, perennials, seeds. Strong NJ-native selection.",tags:["retail"]},
-    {name:"Herring Run Nursery",city:"Baltimore",state:"MD",lat:39.29,lng:-76.61,regions:["va"],url:"https://herringrun.org/nursery",desc:"Non-profit. Native plants of the Chesapeake Bay watershed. Spring sales and online orders.",tags:["retail","nonprofit","events"]},
+    {name:"Herring Run Nursery",city:"Baltimore",state:"MD",lat:39.29,lng:-76.61,regions:["va"],url:"https://herringrunnursery.bluewaterbaltimore.org",desc:"Non-profit. Native plants of the Chesapeake Bay watershed. Spring sales and online orders.",tags:["retail","nonprofit","events"]},
     {name:"Native Roots Nursery",city:"Twin Falls",state:"ID",lat:42.56,lng:-114.46,regions:["mt"],url:"https://native-roots.net",desc:"Native plants for southern Idaho and the high desert intermountain region.",tags:["retail"]},
     {name:"Flutterby Gardens",city:"Boise",state:"ID",lat:43.62,lng:-116.20,regions:["mt"],url:"https://www.goflutterby.com",desc:"Native and pollinator plants for Boise and surrounding Idaho. Retail and landscape design.",tags:["retail"]},
     {name:"Blake Nursery",city:"Big Timber",state:"MT",lat:45.83,lng:-109.95,regions:["mt"],url:"https://www.blakenursery.com/montana-natives",desc:"Family nursery specializing in Montana native trees, shrubs, perennials, and grasses.",tags:["retail"]},
@@ -795,7 +795,10 @@
         document.getElementById('nursery-list').innerHTML = html;
     }
     function renderRow(n) {
-        return '<div class="nursery-row"><div><div class="nursery-name">'+n.name+'</div><div class="nursery-desc">'+n.city+', '+n.state+' — '+n.desc+'</div></div><a class="nursery-link" href="'+n.url+'" target="_blank">Visit →</a></div>';
+        var linkHtml = n.url
+            ? '<a class="nursery-link" href="'+n.url+'" target="_blank">Visit →</a>'
+            : '<span class="nursery-link" style="cursor:default;">'+(n.phone || 'Call to visit')+'</span>';
+        return '<div class="nursery-row"><div><div class="nursery-name">'+n.name+'</div><div class="nursery-desc">'+n.city+', '+n.state+' — '+n.desc+'</div></div>'+linkHtml+'</div>';
     }
     function buildFilters() {
         var bar = document.getElementById('filter-bar');
