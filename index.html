@@ -1025,8 +1025,8 @@
                 });
                 document.getElementById('r-time').innerHTML = seasonBlocks.map(function(b) {
                     var itemsHtml = b.items.map(function(it) { return '<li style="margin-bottom:6px;">'+it+'</li>'; }).join('');
-                    return '<div style="padding:10px 0;border-bottom:1px solid #f0ede8;">'
-                        + (b.header ? '<div style="font-weight:500;color:#1a3a0f;margin-bottom:6px;">'+b.header+'</div>' : '')
+                    return '<div style="padding:10px 0;border-bottom:1px solid #ddd6c8;">'
+                        + (b.header ? '<div style="font-weight:600;font-size:15px;color:#1a3a0f;margin-bottom:6px;">'+b.header+'</div>' : '')
                         + '<ul style="margin:0;padding-left:18px;">'+itemsHtml+'</ul>'
                         + '</div>';
                 }).join('');
