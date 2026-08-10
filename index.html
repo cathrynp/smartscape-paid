@@ -166,7 +166,7 @@
             <input type="text" id="gate-code-input" class="gate-input" placeholder="Enter your license key" autocomplete="off"/>
             <div class="gate-error" id="gate-error"></div>
             <button class="btn-primary" id="gate-submit" onclick="checkGateCode()">Unlock Greenprint Generator</button>
-            <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code yet? Get early access — $9.99 →</a>
+            <a class="gate-buy-link" href="https://smartscape.gumroad.com/l/greenprint" target="_blank">Don't have a code yet? Get early access — $4.99 →</a>
             <span class="gate-resend-link" id="gate-resend-link" onclick="toggleResendForm()">Need your code resent?</span>
             <div class="gate-resend-form" id="gate-resend-form">
                 <p style="font-size:12px;color:var(--warm-gray);margin:0 0 8px;line-height:1.5;">Enter the email you used when you purchased and we'll send your license key.</p>
@@ -304,7 +304,7 @@
                     <div class="rstat"><span class="rstat-num" id="r-nurseries">—</span><span class="rstat-label" id="nursery-label">Local nurseries</span></div>
                 </div>
             </div>
-            <div style="text-align:center;padding:12px 16px;font-size:13px;color:var(--warm-gray);">Love your Greenprint? <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="font-weight:600;">Gift one to a friend — $9.99 →</a></div>
+            <div style="text-align:center;padding:12px 16px;font-size:13px;color:var(--warm-gray);">Love your Greenprint? <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="font-weight:600;">Gift one to a friend — $4.99 →</a></div>
             <div class="result-card">
                 <div class="result-card-header"><h3>🔍 Site analysis</h3></div>
                 <div class="result-card-body"><div class="ai-text" id="r-site">—</div></div>
@@ -930,7 +930,7 @@
             var pt = text.match(/PLANTING TIMELINE:\n([\s\S]*?)(?=SPECIES COUNT:|$)/);
             var sc = text.match(/SPECIES COUNT:\s*(\d+)/);
             document.getElementById('r-title').textContent = 'Greenprint · Zip '+zip;
-            document.getElementById('r-sub').textContent = 'Generated for '+sun+' · '+sizeLabel+(elevationText ? ' · '+elevationText : '')+' · Goals: '+goals;
+            document.getElementById('r-sub').textContent = 'Generated for '+sun+' · '+sizeLabel+(elevationText ? ' · Elevation: '+elevationText : '')+' · Goals: '+goals;
             document.getElementById('r-rec-sub').textContent = 'Native plants matched to zip '+zip+' and your goals';
             document.getElementById('r-layout-sub').textContent = 'Suggested planting arrangement · '+sizeLabel;
             document.getElementById('r-site').textContent = sa ? sa[1].trim() : 'Site analysis complete.';
