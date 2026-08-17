@@ -47,6 +47,15 @@ exports.handler = async function(event) {
       return seasons.filter(function(s) { return timelineSection.indexOf(s) === -1; });
     }
 
+    function plantLinesMissingAttracts(assistantText) {
+      const rIdx = assistantText.indexOf('RECOMMENDED NATIVE PLANTS');
+      if (rIdx === -1) return 0;
+      const tIdx = assistantText.indexOf('PLANTING TIMELINE', rIdx);
+      const plantSection = tIdx === -1 ? assistantText.slice(rIdx) : assistantText.slice(rIdx, tIdx);
+      const plantLines = plantSection.split('\n').filter(function(l) { return l.trim().startsWith('-'); });
+      return plantLines.filter(function(l) { return l.indexOf('Attracts:') === -1; }).length;
+    }
+
     let response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -64,15 +73,21 @@ exports.handler = async function(event) {
     if (response.status === 200) {
       const truncated = wasTruncated(text);
       const missing = missingSeasons(extractAssistantText(text));
-      if (truncated || missing.length > 0) {
-        const reason = truncated
-          ? 'Your previous response above was cut off before it finished (it ran out of space partway through, most likely during the PLANTING TIMELINE section).'
-          : 'Your PLANTING TIMELINE above is missing the following required season(s): ' + missing.join(', ') + '.';
-        console.log(truncated ? 'Response was truncated (stop_reason: max_tokens) — retrying once.' : 'Missing season(s) in first attempt: ' + missing.join(', ') + ' — retrying once.');
+      const missingAttracts = plantLinesMissingAttracts(extractAssistantText(text));
+      if (truncated || missing.length > 0 || missingAttracts > 0) {
+        let reason;
+        if (truncated) {
+          reason = 'Your previous response above was cut off before it finished (it ran out of space partway through, most likely during the PLANTING TIMELINE section).';
+        } else if (missing.length > 0) {
+          reason = 'Your PLANTING TIMELINE above is missing the following required season(s): ' + missing.join(', ') + '.';
+        } else {
+          reason = missingAttracts + ' plant line(s) above are missing the required trailing "Attracts: [...]" tag naming the specific pollinators, birds, or wildlife that plant supports.';
+        }
+        console.log(truncated ? 'Response was truncated (stop_reason: max_tokens) — retrying once.' : (missing.length > 0 ? 'Missing season(s) in first attempt: ' + missing.join(', ') + ' — retrying once.' : missingAttracts + ' plant line(s) missing Attracts tag — retrying once.'));
         const priorAssistantText = extractAssistantText(text);
         const retryMessages = incoming.messages.concat([
           { role: 'assistant', content: priorAssistantText },
-          { role: 'user', content: reason + ' Provide your complete full response again in the exact same format, but this time keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response, including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, fits completely. Even if a season is maintenance-only, it must still appear with its own header and content.' }
+          { role: 'user', content: reason + ' Provide your complete full response again in the exact same format, but this time keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response fits completely, while still including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, AND every single plant line ending with its own "Attracts: [...]" tag naming specific pollinators, birds, or wildlife — never drop the Attracts tag to save space. Even if a season is maintenance-only, it must still appear with its own header and content.' }
         ]);
         const retryResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -85,10 +100,10 @@ exports.handler = async function(event) {
         });
         const retryText = await retryResponse.text();
         console.log('Retry status:', retryResponse.status, 'response:', retryText.substring(0, 300));
-        if (retryResponse.status === 200 && !wasTruncated(retryText) && missingSeasons(extractAssistantText(retryText)).length === 0) {
+        if (retryResponse.status === 200 && !wasTruncated(retryText) && missingSeasons(extractAssistantText(retryText)).length === 0 && plantLinesMissingAttracts(extractAssistantText(retryText)) === 0) {
           text = retryText;
         } else {
-          console.log('Retry still truncated, still missing season(s), or failed; keeping original response.');
+          console.log('Retry still truncated, still missing season(s)/Attracts tags, or failed; keeping original response.');
         }
       }
     }
