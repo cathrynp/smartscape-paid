@@ -2,7 +2,7 @@
 // Read-only check of how many redemptions each capped promo code (VIPACCESS, EARLYACCESS)
 // has used so far, without incrementing anything. Protected by the same EXPORT_KEY used
 // for the Greenprint log export — visit:
-//   https://greenprint-subscriber.netlify.app/.netlify/functions/check-promo-usage?key=YOUR_KEY
+//   https://greenprints.smartscape.co/.netlify/functions/check-promo-usage?key=YOUR_KEY
 
 const { getStore } = require('@netlify/blobs');
 
@@ -16,8 +16,8 @@ exports.handler = async function (event) {
 
   // Keep this in sync with the BYPASS_LIMITS object in verify-code.js
   var BYPASS_LIMITS = {
-    'VIPACCESS': 13,
-    'EARLYACCESS': 42
+    'VIPACCESS': 55,
+    'EARLYACCESS': 55
   };
 
   try {
@@ -31,13 +31,26 @@ exports.handler = async function (event) {
     for (var code in BYPASS_LIMITS) {
       var record = await store.get(code, { type: 'json' });
       var count = (record && record.count) || 0;
+      var entries = (record && record.entries) || [];
       var limit = BYPASS_LIMITS[code];
-      results[code] = { used: count, limit: limit, remaining: limit - count };
+      results[code] = { used: count, limit: limit, remaining: limit - count, entries: entries };
     }
 
     var lines = ['Promo code usage:\n'];
     for (var c in results) {
-      lines.push(c + ': ' + results[c].used + ' / ' + results[c].limit + ' used  (' + results[c].remaining + ' remaining)');
+      var r = results[c];
+      lines.push(c + ': ' + r.used + ' / ' + r.limit + ' used  (' + r.remaining + ' remaining)');
+
+      if (r.entries.length) {
+        for (var i = 0; i < r.entries.length; i++) {
+          var e = r.entries[i];
+          var loc = [e.city, e.region, e.country].filter(Boolean).join(', ') || 'Unknown location';
+          lines.push('   - ' + e.time + '  ' + loc);
+        }
+      } else {
+        lines.push('   (no per-use location data yet — logging started after this update; earlier redemptions aren\'t retroactively tracked)');
+      }
+      lines.push('');
     }
 
     return {

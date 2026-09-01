@@ -22,33 +22,62 @@ exports.handler = async function (event) {
   }
 
   // Capped promo codes — total redemptions tracked via Netlify Blobs, matching the
-  // usage limits set on their Gumroad discount codes (VIPACCESS 13, EARLYACCESS 42)
+  // usage limits set on their Gumroad discount codes (VIPACCESS 55, EARLYACCESS 55)
   var BYPASS_LIMITS = {
-    'VIPACCESS': 13,
-    'EARLYACCESS': 42
+    'VIPACCESS': 55,
+    'EARLYACCESS': 55
   };
 
   if (BYPASS_LIMITS.hasOwnProperty(code)) {
     var limit = BYPASS_LIMITS[code];
-    // Explicitly pass siteID and token so Blobs works regardless of automatic
-    // environment injection (fixes MissingBlobsEnvironmentError).
-    var store = getStore({
-      name: 'promo-usage',
-      siteID: '58059f0f-bc4f-4cec-8963-b609550a12e6',
-      token: process.env.BLOBS_TOKEN
-    });
-    var record = await store.get(code, { type: 'json' });
-    var count = (record && record.count) || 0;
+    try {
+      // Explicitly pass siteID and token so Blobs works regardless of automatic
+      // environment injection (fixes MissingBlobsEnvironmentError).
+      var store = getStore({
+        name: 'promo-usage',
+        siteID: '58059f0f-bc4f-4cec-8963-b609550a12e6',
+        token: process.env.BLOBS_TOKEN
+      });
+      var record = await store.get(code, { type: 'json' });
+      var count = (record && record.count) || 0;
+      var entries = (record && record.entries) || [];
 
-    if (count >= limit) {
+      if (count >= limit) {
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ valid: false, error: 'This promo code has reached its usage limit. Email smartscapeapp@gmail.com for options.' })
+        };
+      }
+
+      // Capture a rough location from Netlify's built-in geo header, if available.
+      // This is best-effort — if it's missing or fails to parse, we still log the
+      // use, just without a location attached.
+      var geo = {};
+      try {
+        var geoHeader = event.headers && (event.headers['x-nf-geo'] || event.headers['X-Nf-Geo']);
+        if (geoHeader) {
+          geo = JSON.parse(Buffer.from(geoHeader, 'base64').toString('utf8')) || {};
+        }
+      } catch (geoErr) {
+        geo = {};
+      }
+
+      entries.push({
+        time: new Date().toISOString(),
+        city: (geo.city || 'Unknown'),
+        region: (geo.subdivision && geo.subdivision.name) || '',
+        country: (geo.country && geo.country.name) || ''
+      });
+
+      await store.setJSON(code, { count: count + 1, entries: entries });
+      return { statusCode: 200, body: JSON.stringify({ valid: true }) };
+    } catch (err) {
+      console.error('promo blobs error:', err);
       return {
         statusCode: 200,
-        body: JSON.stringify({ valid: false, error: 'This promo code has reached its usage limit. Email smartscapeapp@gmail.com for options.' })
+        body: JSON.stringify({ valid: false, error: 'Something went wrong checking that code. Please try again in a moment.' })
       };
     }
-
-    await store.setJSON(code, { count: count + 1 });
-    return { statusCode: 200, body: JSON.stringify({ valid: true }) };
   }
 
   // Hardcoded bypass keys for beta testers — exempt from device cap
