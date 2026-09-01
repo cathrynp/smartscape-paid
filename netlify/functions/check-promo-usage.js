@@ -48,7 +48,7 @@ exports.handler = async function (event) {
           lines.push('   - ' + e.time + '  ' + loc);
         }
       } else {
-        lines.push('   (no per-use location data yet — logging started after this update; earlier redemptions aren\'t retroactively tracked)');
+        lines.push('   (no per-use location data yet - logging started after this update; earlier redemptions aren\'t retroactively tracked)');
       }
       lines.push('');
     }
