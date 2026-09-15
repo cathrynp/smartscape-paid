@@ -42,7 +42,7 @@ exports.handler = async function (event) {
       lines.push(c + ': ' + r.used + ' / ' + r.limit + ' used  (' + r.remaining + ' remaining)');
 
       if (r.entries.length) {
-        for (var i = 0; i < r.entries.length; i++) {
+        for (var i = r.entries.length - 1; i >= 0; i--) {
           var e = r.entries[i];
           var loc = [e.city, e.region, e.country].filter(Boolean).join(', ') || 'Unknown location';
           lines.push('   - ' + e.time + '  ' + loc);
