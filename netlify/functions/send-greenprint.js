@@ -201,6 +201,44 @@ exports.handler = async function(event) {
 </body>
 </html>`;
 
+
+  // Plain-text version (sent alongside the HTML; helps inbox placement and readability)
+  function stripTags(t) { return String(t || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); }
+  const textParts = [];
+  textParts.push('YOUR GREENPRINT — Native plant plan for zip code ' + (zip || 'your area'));
+  textParts.push('');
+  if (summaryLine) { textParts.push(''); textParts.push(stripTags(summaryLine)); }
+  textParts.push('');
+  textParts.push('SITE ANALYSIS');
+  textParts.push(stripTags(siteAnalysis));
+  textParts.push('');
+  textParts.push('RECOMMENDED NATIVE PLANTS');
+  allLines.forEach(function(l) {
+    const t = l.trim();
+    const lm = t.match(/^LAYER:\s*(.+)$/i);
+    if (lm) { textParts.push(''); textParts.push(lm[1].trim().toUpperCase()); return; }
+    if (t.startsWith('-')) { textParts.push('- ' + stripTags(t.replace(/^-\s*/, ''))); textParts.push(''); }
+  });
+  textParts.push('PLANTING TIMELINE');
+  seasonBlocks.forEach(function(b) {
+    if (b.header) textParts.push(b.header);
+    b.items.forEach(function(it) { textParts.push('- ' + stripTags(it)); });
+    textParts.push('');
+  });
+  if (nurseries && typeof nurseries === 'object') {
+    const nl = [].concat(nurseries.local || [], nurseries.national || []);
+    if (nl.length) {
+      textParts.push('NATIVE PLANT NURSERIES NEAR YOU');
+      nl.forEach(function(n) {
+        textParts.push('- ' + (n.name || '') + (n.city ? ' (' + n.city + (n.state ? ', ' + n.state : '') + ')' : '') + (n.url ? ' — ' + n.url : (n.phone ? ' — ' + n.phone : '')));
+      });
+      textParts.push('');
+    }
+  }
+  textParts.push('Greenprints by SmartScape — https://smartscape.co');
+  textParts.push("Know someone who'd love the Greenprint Generator? Gift it to them here: https://smartscape.gumroad.com/l/greenprint");
+  const textBody = textParts.join('\n');
+
   try {
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -209,12 +247,13 @@ exports.handler = async function(event) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'SmartScape Greenprint <noreply@mail.smartscape.co>',
+        from: 'Greenprints from SmartScape <greenprint@mail.smartscape.co>',
         to: [email],
         bcc: ['smartscapeapp@gmail.com'],
         reply_to: 'smartscapeapp@gmail.com',
         subject: `Your SmartScape Greenprint — Zip ${zip || ''}`,
-        html: html
+        html: html,
+        text: textBody
       })
     });
 
