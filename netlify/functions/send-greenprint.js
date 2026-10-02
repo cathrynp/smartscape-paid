@@ -196,7 +196,7 @@ exports.handler = async function(event) {
         <tr><td style="padding:28px 36px;background:#1a3a0f;">
           <p style="margin:0 0 8px;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.6;">Your Greenprint's plant recommendations are shaped and directed by human native-plant expertise, powered by Claude AI. Your local nursery is a great resource too — they can confirm current availability and answer any site-specific questions.</p>
           <p style="margin:0 0 14px;font-size:12px;color:rgba(255,255,255,0.85);">Greenprints by <a href="https://smartscape.co" target="_blank" rel="noopener" style="color:#fff;font-weight:600;">SmartScape</a> ✨AI For Good · Early Access 2026</p>
-          <p style="margin:0;font-size:12px;color:#fff;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">Know someone who'd love Greenprint Generator? <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="color:#fff;font-weight:600;text-decoration:underline;">Gift it to them here</a></p>
+          <p style="margin:0;font-size:12px;color:#fff;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">Know someone who'd love Greenprint Generator? <a href="https://smartscape.gumroad.com/l/greenprint" target="_blank" rel="noopener" style="color:#fff;font-weight:600;text-decoration:underline;">Gift it to them here</a> (on the second checkout screen, switch on “Give this as a gift”)</p>
         </td></tr>
 
       </table>
@@ -240,7 +240,7 @@ exports.handler = async function(event) {
     }
   }
   textParts.push('Greenprints by SmartScape — https://smartscape.co');
-  textParts.push("Know someone who'd love the Greenprint Generator? Gift it to them here: https://smartscape.gumroad.com/l/greenprint");
+  textParts.push("Know someone who'd love the Greenprint Generator? Gift it to them here: https://smartscape.gumroad.com/l/greenprint (on the second checkout screen, switch on \"Give this as a gift\")");
   const textBody = textParts.join('\n');
 
   try {
