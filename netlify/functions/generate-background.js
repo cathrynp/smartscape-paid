@@ -16,7 +16,7 @@ exports.handler = async function(event) {
 
     const requestBody = {
       model: 'claude-sonnet-4-6',
-      max_tokens: 3500,
+      max_tokens: 6000,
       messages: incoming.messages
     };
 
@@ -53,7 +53,7 @@ exports.handler = async function(event) {
       const tIdx = assistantText.indexOf('PLANTING TIMELINE', rIdx);
       const plantSection = tIdx === -1 ? assistantText.slice(rIdx) : assistantText.slice(rIdx, tIdx);
       const plantLines = plantSection.split('\n').filter(function(l) { return l.trim().startsWith('-'); });
-      return plantLines.filter(function(l) { return l.indexOf('Attracts:') === -1; }).length;
+      return plantLines.filter(function(l) { return l.indexOf('Attracts:') === -1 || !/Lifecycle:\s*(Perennial|Annual|Biennial)/i.test(l); }).length;
     }
 
     let response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -81,13 +81,13 @@ exports.handler = async function(event) {
         } else if (missing.length > 0) {
           reason = 'Your PLANTING TIMELINE above is missing the following required season(s): ' + missing.join(', ') + '.';
         } else {
-          reason = missingAttracts + ' plant line(s) above are missing the required trailing "Attracts: [...]" tag naming the specific pollinators, birds, or wildlife that plant supports.';
+          reason = missingAttracts + ' plant line(s) above are missing the required trailing "Attracts: [...]" tag and/or the final "Lifecycle: [Perennial/Annual/Biennial]." tag.';
         }
         console.log(truncated ? 'Response was truncated (stop_reason: max_tokens) — retrying once.' : (missing.length > 0 ? 'Missing season(s) in first attempt: ' + missing.join(', ') + ' — retrying once.' : missingAttracts + ' plant line(s) missing Attracts tag — retrying once.'));
         const priorAssistantText = extractAssistantText(text);
         const retryMessages = incoming.messages.concat([
           { role: 'assistant', content: priorAssistantText },
-          { role: 'user', content: reason + ' Provide your complete full response again in the exact same format, but this time keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response fits completely, while still including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, AND every single plant line ending with its own "Attracts: [...]" tag naming specific pollinators, birds, or wildlife — never drop the Attracts tag to save space. Even if a season is maintenance-only, it must still appear with its own header and content.' }
+          { role: 'user', content: reason + ' Provide your complete full response again in the exact same format, but this time keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response fits completely, while still including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, AND every single plant line ending with its own "Attracts: [...]" tag naming specific pollinators, birds, or wildlife followed by "Lifecycle: [Perennial/Annual/Biennial]." — never drop either tag to save space. Even if a season is maintenance-only, it must still appear with its own header and content.' }
         ]);
         const retryResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -96,11 +96,14 @@ exports.handler = async function(event) {
             'x-api-key': API_KEY,
             'anthropic-version': '2023-06-01'
           },
-          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 3500, messages: retryMessages })
+          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 6000, messages: retryMessages })
         });
         const retryText = await retryResponse.text();
         console.log('Retry status:', retryResponse.status, 'response:', retryText.substring(0, 300));
-        if (retryResponse.status === 200 && !wasTruncated(retryText) && missingSeasons(extractAssistantText(retryText)).length === 0 && plantLinesMissingAttracts(extractAssistantText(retryText)) === 0) {
+        const retryOk = retryResponse.status === 200 && !wasTruncated(retryText) && missingSeasons(extractAssistantText(retryText)).length === 0;
+        const retryMissingTags = retryOk ? plantLinesMissingAttracts(extractAssistantText(retryText)) : Infinity;
+        const originalUsable = !truncated && missing.length === 0;
+        if (retryOk && (retryMissingTags === 0 || !originalUsable || retryMissingTags < missingAttracts)) {
           text = retryText;
         } else {
           console.log('Retry still truncated, still missing season(s)/Attracts tags, or failed; keeping original response.');
