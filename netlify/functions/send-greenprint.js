@@ -93,13 +93,17 @@ exports.handler = async function(event) {
     }
     if (!trimmed.startsWith('-')) return '';
     const idx = plantIdx++;
-    const clean = trimmed.replace(/^-\s*/, '');
+    let clean = trimmed.replace(/^-\s*/, '');
+    const lifeMatch = clean.match(/Lifecycle:\s*(Perennial|Annual|Biennial)/i);
+    const lifecycle = lifeMatch ? lifeMatch[1].charAt(0).toUpperCase() + lifeMatch[1].slice(1).toLowerCase() : '';
+    clean = clean.replace(/\s*Lifecycle:\s*(Perennial|Annual|Biennial)\.?/i, '');
+    const lifeBadge = lifecycle ? ' <span style="display:inline-block;font-size:10px;letter-spacing:.03em;color:#6b6558;border:1px solid #ddd6c8;border-radius:10px;padding:1px 7px;font-weight:400;vertical-align:middle;">' + lifecycle + '</span>' : '';
     const parts = clean.split('—');
     let descText = parts.length > 1 ? parts.slice(1).join('—').trim() : '';
     if (descText) descText = descText.charAt(0).toUpperCase() + descText.slice(1);
     const nameHTML = parts.length > 1
-      ? '<div style="font-weight:600;font-size:15px;color:#1a3a0f;">' + parts[0].trim() + '</div><div style="color:#333;margin-top:3px;">' + descText + '</div>'
-      : clean;
+      ? '<div style="font-weight:600;font-size:15px;color:#1a3a0f;">' + parts[0].trim() + lifeBadge + '</div><div style="color:#333;margin-top:3px;">' + descText + '</div>'
+      : clean + lifeBadge;
 
     if (includePhotos && thumbMap[idx]) {
       return '<tr><td style="padding:8px 0;border-bottom:1px solid #ddd6c8;vertical-align:top;">'
