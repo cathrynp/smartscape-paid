@@ -20,7 +20,7 @@ exports.handler = async function(event) {
     }
 
     // Clean up once retrieved so storage doesn't grow unbounded
-    if (result.status === 'done' || result.status === 'error') {
+    if (result.status === 'done' || result.status === 'error' || result.status === 'limit' || result.status === 'auth') {
       store.delete(jobId).catch(function(e) { console.log('Cleanup failed:', e.message); });
     }
 
