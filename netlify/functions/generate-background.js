@@ -28,6 +28,7 @@ const CODE_FIXES = [
 const KNOWN_MISTAKES = [
   'Quercus geminata is Sand Live Oak (not "Scrub Live Oak"); Quercus inopina is Scrub Oak.',
   'Coastalplain Honeycombhead is Balduina angustifolia. Balduina uniflora is Oneflower Honeycombhead (flatwoods/bog plant of the panhandle and NE Florida).',
+  'Balduina angustifolia (Coastalplain Honeycombhead) is an annual (occasionally biennial), not a perennial.',
   'Wetland / wet-site plants (for example Scarlet Rosemallow Hibiscus coccineus, Pond Apple, Coreopsis floridana, swamp and marsh species) do not fit when Water savings is a goal or the site is dry/sandy.',
   'Milkweed must be a species native to the zip code\'s ecoregion (never tropical milkweed, Asclepias curassavica).',
   'State-listed endangered or threatened plants (for example Curtiss\' Milkweed, Asclepias curtissii, in Florida) need a short note that they are state-listed and should only be bought as nursery-propagated stock.',
@@ -205,13 +206,13 @@ function parseJson(s) {
 const FORMAT_RULES = 'FORMAT FOR EVERY PLANT LINE (exactly): "- Common Name (Scientific name) — one sentence on why it fits this site, sun exposure and goals. Mature size: <plain-language size>. <One brief factual sentence on a well-documented Indigenous use of the plant, as plain text with no label, using the word "Indigenous"; leave it out entirely if not well documented and never mention that it is left out.> Attracts: <plain list of specific pollinators, birds or wildlife, any parenthetical at most six words>. Lifecycle: <Perennial, Annual or Biennial>." Write in plain everyday language, name who benefits when a plant supports pollinators or wildlife, give one common name only (no slashes), never state a berry or fruit colour, make no insect or wildlife claim that is not well documented, and for a state-listed endangered or threatened plant say so briefly and say to buy only nursery-propagated stock. The entry must be a single line.';
 
 function judgePrompt(siteDetails, plants, timeline, shortMode) {
-  return 'You are a strict native-plant fact checker for a landscaping app. Check the items below against the site details. Flag anything you have good reason to doubt. When unsure whether a plant is truly native to this specific area, flag it. DO NOT write replacement text. Reply briefly.\n\n' +
+  return 'You are a strict native-plant fact checker for a landscaping app. Check the items below against the site details. List only items you are SURE are wrong. If an item is merely doubtful or you cannot be certain, either leave it out or mark it sure=false. DO NOT write replacement text. Reply briefly.\n\n' +
     'SITE DETAILS:\n' + siteDetails + '\n\n' +
     'CHECK EVERY PLANT FOR: (1) NAME: the scientific name belongs to the common name given, and the common name is the standard one. (2) NATIVE RANGE: native to the specific county/ecoregion of this zip code, not merely somewhere in the state. (3) HABITAT: light, soil, drainage and moisture needs fit the site and sun; moisture-loving, shade-loving or wetland plants do not fit a dry sunny sandy site or a Water savings goal; "drought-tolerant" must be true for that species. (4) LIFECYCLE tag is correct. (5) LAYER: right layer for real height and form (Groundcover only under about 1 foot; herbaceous wildflowers are not Shrubs). (6) CLAIMS: size, wildlife and insect statements are well documented; milkweed is locally native. (7) State-listed endangered/threatened plants carry a sourcing note. (8) Tree size fits the yard size.\n' +
     'KNOWN MISTAKES:\n- ' + KNOWN_MISTAKES.join('\n- ') + '\n\n' +
     'PLANTS (numbered):\n' + plants.map(function (p) { return p.n + '. ' + p.line; }).join('\n') + '\n\n' +
     (timeline ? 'PLANTING TIMELINE:\n' + timeline + '\n\nCHECK THE TIMELINE: the planting season fits the climate (dry-summer climates such as the Pacific Northwest and California: main planting in fall; Florida and the Gulf Coast: main planting at the start of the wet season, June–July, with Fall, Winter and Spring for maintenance, seed sowing and light watering of installed plants); it agrees with itself (for example no "save seed for next summer" in one entry and "sow in spring" in another); it names only plants in the list.\n\n' : '') +
-    'Reply with ONLY this JSON, nothing else: {"plants":[{"n":<number>,"problem":"<reason, at most ' + (shortMode ? '10' : '20') + ' words>"}],"timeline":[' + (timeline ? '"<problem, at most 25 words>"' : '') + '],"notes":"<one short sentence>"}. Use empty lists when nothing is wrong.';
+    'Reply with ONLY this JSON, nothing else: {"plants":[{"n":<number>,"sure":<true only if you are certain it is an error, else false>,"problem":"<reason, at most ' + (shortMode ? '10' : '20') + ' words>"}],"timeline":[' + (timeline ? '"<problem, at most 25 words>"' : '') + '],"notes":"<one short sentence>"}. Use empty lists when nothing is wrong.';
 }
 
 async function judge(apiKey, siteDetails, plants, timeline, usage) {
@@ -222,8 +223,8 @@ async function judge(apiKey, siteDetails, plants, timeline, usage) {
       if (j && !r.truncated) {
         const valid = {};
         plants.forEach(function (p) { valid[p.n] = true; });
-        const flagged = (Array.isArray(j.plants) ? j.plants : []).map(function (x) { return { n: parseInt(x && x.n, 10), problem: String((x && x.problem) || '').slice(0, 200) }; }).filter(function (x) { return valid[x.n]; });
-        return { ok: true, plants: flagged, timeline: (Array.isArray(j.timeline) ? j.timeline : []).map(function (x) { return String(x).slice(0, 300); }).filter(Boolean), notes: String(j.notes || '').slice(0, 400) };
+        const flagged = (Array.isArray(j.plants) ? j.plants : []).map(function (x) { return { n: parseInt(x && x.n, 10), sure: !!(x && x.sure === true), problem: String((x && x.problem) || '').slice(0, 200) }; }).filter(function (x) { return valid[x.n]; });
+        return { ok: true, raw: r.text.slice(0, 4000), plants: flagged, timeline: (Array.isArray(j.timeline) ? j.timeline : []).map(function (x) { return String(x).slice(0, 300); }).filter(Boolean), notes: String(j.notes || '').slice(0, 400) };
       }
       console.log('Judge reply unusable (attempt ' + (attempt + 1) + '): ' + (r.truncated ? 'truncated' : 'unparseable'));
     } catch (e) { console.log('Judge attempt ' + (attempt + 1) + ' failed: ' + e.message); }
@@ -264,30 +265,34 @@ async function rewriteTimeline(apiKey, model, siteDetails, timeline, problems, p
   } catch (e) { console.log('Timeline rewrite (' + model + ') failed: ' + e.message); return null; }
 }
 
-// Sonnet judges; Haiku rewrites flagged entries; Sonnet re-checks the rewrites and only writes what is still wrong.
+// Sonnet judges (sure errors only); Haiku rewrites sure-flagged plants; Sonnet re-checks those rewrites and writes only what is still wrong;
+// the timeline is corrected LAST, once, against the final plant list.
 async function reviewGreenprint(apiKey, t, siteDetails, usage) {
-  const detail = { flagged: [], timelineProblems: 0, rewritten: 0, replacedPlants: 0, timelineRewritten: false, recheckFlagged: 0, escalated: 0, judgeNotes: '', recheckNotes: '' };
+  const detail = { original: t, judgeRaw: '', recheckRaw: '', flaggedSure: [], flaggedUnsure: [], timelineProblems: 0, rewritten: 0, replacedPlants: 0, timelineRewritten: false, recheckFlagged: 0, escalated: 0, judgeNotes: '', recheckNotes: '' };
   const sec = splitSections(t);
   if (!sec) return { text: t, changed: 0, ok: false, notes: 'no sections', proposed: 0, detail: detail };
   const plants = getPlantLines(t).map(function (line, i) { return { n: i + 1, line: line }; });
   const timeline = getTimeline(t);
 
   const j1 = await judge(apiKey, siteDetails, plants, timeline, usage);
+  detail.judgeRaw = j1.raw || '';
   if (!j1.ok) return { text: t, changed: 0, ok: false, notes: j1.notes, proposed: 0, detail: detail };
-  detail.flagged = j1.plants.map(function (x) { return x.n; });
+  const sure = j1.plants.filter(function (x) { return x.sure; });
+  detail.flaggedSure = sure.map(function (x) { return x.n; });
+  detail.flaggedUnsure = j1.plants.filter(function (x) { return !x.sure; }).map(function (x) { return x.n; });
   detail.timelineProblems = j1.timeline.length;
-  detail.judgeNotes = j1.notes + ' | ' + j1.plants.map(function (x) { return x.n + ': ' + x.problem; }).join(' ; ') + (j1.timeline.length ? ' | TIMELINE: ' + j1.timeline.join(' ; ') : '');
-  if (!j1.plants.length && !j1.timeline.length) return { text: t, changed: 0, ok: true, notes: 'none', proposed: 0, detail: detail };
+  detail.judgeNotes = j1.notes + ' | ' + j1.plants.map(function (x) { return x.n + (x.sure ? '(sure)' : '(unsure)') + ': ' + x.problem; }).join(' ; ') + (j1.timeline.length ? ' | TIMELINE: ' + j1.timeline.join(' ; ') : '');
+  if (!sure.length && !j1.timeline.length) return { text: t, changed: 0, ok: true, notes: 'none', proposed: 0, detail: detail };
 
-  let text = t, changed = 0;
+  let text = t, changed = 0, plantNamesChanged = false;
   const timelineProblems = j1.timeline.slice();
   const lineOf = {};
   plants.forEach(function (p) { lineOf[p.n] = p.line; });
 
-  // Haiku rewrites flagged plant entries
+  // Haiku rewrites the sure-flagged plant entries
   const rewrittenNs = [];
-  if (j1.plants.length) {
-    const flagged = j1.plants.map(function (x) { return { n: x.n, problem: x.problem, line: lineOf[x.n] }; });
+  if (sure.length) {
+    const flagged = sure.map(function (x) { return { n: x.n, problem: x.problem, line: lineOf[x.n] }; });
     const used = plants.map(function (p) { return sciName(p.line); }).filter(Boolean);
     const blocks = await rewritePlants(apiKey, WRITER, siteDetails, flagged, used, usage);
     flagged.forEach(function (f) {
@@ -295,29 +300,22 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
       if (!validPlantLine(nl)) return;
       const next = setPlantLine(text, f.n, nl);
       if (!next) return;
-      if (sciName(nl) !== sciName(f.line)) { detail.replacedPlants++; timelineProblems.push('Plant ' + (f.line.match(/^-\s*([^(]+)\(/) || [, ''])[1].trim() + ' was replaced by ' + (nl.match(/^-\s*([^(]+)\(/) || [, ''])[1].trim() + ' — update every timeline mention.'); }
+      if (sciName(nl) !== sciName(f.line)) { detail.replacedPlants++; plantNamesChanged = true; }
       text = next; rewrittenNs.push(f.n); changed++;
     });
     detail.rewritten = rewrittenNs.length;
   }
 
-  // Haiku corrects the timeline
-  let timelineNow = getTimeline(text);
-  if (timelineProblems.length) {
-    const names = getPlantLines(text).map(function (l) { return (l.match(/^-\s*(.+?)\s*—/) || [, l])[1]; });
-    const nt = await rewriteTimeline(apiKey, WRITER, siteDetails, timelineNow, timelineProblems, names, usage);
-    if (nt) { const next = setTimeline(text, nt); if (next && !structureProblem(next, false)) { text = next; timelineNow = nt; detail.timelineRewritten = true; changed++; } }
-  }
-
-  // Sonnet re-checks only what was rewritten
-  if (rewrittenNs.length || detail.timelineRewritten) {
+  // Sonnet re-checks only the rewritten plant entries; writes only those still wrong
+  if (rewrittenNs.length) {
     const nowPlants = getPlantLines(text).map(function (line, i) { return { n: i + 1, line: line }; });
     const toCheck = nowPlants.filter(function (p) { return rewrittenNs.indexOf(p.n) !== -1; });
-    const j2 = await judge(apiKey, siteDetails, toCheck.length ? toCheck : [{ n: 0, line: '(no plant changes)' }], detail.timelineRewritten ? timelineNow : '', usage);
+    const j2 = await judge(apiKey, siteDetails, toCheck, '', usage);
+    detail.recheckRaw = j2.raw || '';
     if (j2.ok) {
-      detail.recheckFlagged = j2.plants.filter(function (x) { return x.n > 0; }).length;
-      detail.recheckNotes = j2.notes + ' | ' + j2.plants.map(function (x) { return x.n + ': ' + x.problem; }).join(' ; ') + (j2.timeline.length ? ' | TIMELINE: ' + j2.timeline.join(' ; ') : '');
-      const still = j2.plants.filter(function (x) { return x.n > 0; });
+      const still = j2.plants.filter(function (x) { return x.sure && x.n > 0; });
+      detail.recheckFlagged = still.length;
+      detail.recheckNotes = j2.notes + ' | ' + j2.plants.map(function (x) { return x.n + (x.sure ? '(sure)' : '(unsure)') + ': ' + x.problem; }).join(' ; ');
       if (still.length) {
         const flagged2 = still.map(function (x) { return { n: x.n, problem: x.problem, line: nowPlants[x.n - 1].line }; });
         const used2 = nowPlants.map(function (p) { return sciName(p.line); }).filter(Boolean);
@@ -326,19 +324,23 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
           const nl = blocks2[f.n];
           if (!validPlantLine(nl)) return;
           const next = setPlantLine(text, f.n, nl);
-          if (next) { text = next; detail.escalated++; changed++; }
+          if (next) { if (sciName(nl) !== sciName(f.line)) plantNamesChanged = true; text = next; detail.escalated++; changed++; }
         });
-      }
-      if (j2.timeline.length && detail.timelineRewritten) {
-        const names2 = getPlantLines(text).map(function (l) { return (l.match(/^-\s*(.+?)\s*—/) || [, l])[1]; });
-        const nt2 = await rewriteTimeline(apiKey, STRONG, siteDetails, getTimeline(text), j2.timeline, names2, usage);
-        if (nt2) { const next = setTimeline(text, nt2); if (next && !structureProblem(next, false)) { text = next; detail.escalated++; changed++; } }
       }
     }
   }
 
-  if (changed && structureProblem(text, false)) return { text: t, changed: 0, ok: true, notes: 'edits discarded: structure check failed', proposed: j1.plants.length, detail: detail };
-  return { text: text, changed: changed, ok: true, notes: detail.judgeNotes, proposed: j1.plants.length + j1.timeline.length, detail: detail };
+  // Timeline LAST: one Haiku pass against the final plant list
+  if (timelineProblems.length || plantNamesChanged) {
+    const problems = timelineProblems.slice();
+    if (plantNamesChanged) problems.push('Some plants in the list were replaced. Make every timeline bullet refer only to plants in the final list (use their common names exactly as listed) and remove any plant that is no longer listed.');
+    const names = getPlantLines(text).map(function (l) { return (l.match(/^-\s*(.+?)\s*\(/) || [, l])[1]; });
+    const nt = await rewriteTimeline(apiKey, WRITER, siteDetails, getTimeline(text), problems, names, usage);
+    if (nt) { const next = setTimeline(text, nt); if (next && !structureProblem(next, false)) { text = next; detail.timelineRewritten = true; changed++; } }
+  }
+
+  if (changed && structureProblem(text, false)) return { text: t, changed: 0, ok: true, notes: 'edits discarded: structure check failed', proposed: sure.length, detail: detail };
+  return { text: text, changed: changed, ok: true, notes: detail.judgeNotes, proposed: sure.length + j1.timeline.length, detail: detail };
 }
 
 // ---------- usage meter ----------
@@ -452,7 +454,7 @@ exports.handler = async function (event) {
       status: 'done',
       body: JSON.stringify({ content: [{ type: 'text', text: text }] }),
       warning: warning,
-      debug: { cost: cost, usage: usage, writer: WRITER, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail },
+      debug: { cost: cost, usage: usage, writer: WRITER, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, finalText: text },
       promo: auth.k === 'promo',
       buyLink: auth.k === 'promo' && newCount >= RUN_CAP ? BUY_LINK : ''
     });
