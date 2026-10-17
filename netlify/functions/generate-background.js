@@ -163,23 +163,25 @@ function splitSections(t) {
 }
 
 function buildReviewPrompt(siteDetails, plantLines, timeline) {
-  return 'You are a careful native-plant fact checker for a landscaping app. Check the plant list and planting timeline below against the site details. Be conservative: flag a plant ONLY when you are confident there is a real error. Do not rewrite for style.\n\n' +
+  return 'You are a strict native-plant fact checker for a landscaping app. Check the plant list and planting timeline below against the site details. Flag anything you have good reason to doubt, and fix it. A wrong or doubtful plant is worse than a replaced plant, so when unsure whether a plant is truly native to this specific area, replace it with one you are sure of. Do not rewrite for style.\n\n' +
     'SITE DETAILS:\n' + siteDetails + '\n\n' +
-    'CHECK EACH PLANT FOR:\n' +
-    '1. The scientific name actually belongs to the common name given (wrong species / name mix-ups).\n' +
-    '2. It is truly native to the specific ecoregion/zip, not just the state.\n' +
-    '3. Its light, soil, drainage and moisture needs fit the site and the sun selected; wetland/wet-site plants do not fit a dry site or a Water savings goal.\n' +
-    '4. Statements about size, wildlife and insects are well established (no unverified insect claims); milkweed is a locally native species.\n' +
-    '5. State-listed endangered/threatened plants carry a short sourcing note (buy only nursery-propagated stock).\n' +
-    '6. The planting timeline is consistent with the plant lines and with itself (for example, no advice to save seed for a season in which another entry says to sow it).\n' +
-    '7. Tree size fits the yard size.\n\n' +
+    'CHECK EVERY PLANT FOR:\n' +
+    '1. NAME: the scientific name truly belongs to the common name given, and the common name is the standard one (for example Ceratiola ericoides is Florida rosemary).\n' +
+    '2. NATIVE RANGE: the plant is native to the specific county/ecoregion of this zip code, not merely somewhere in the state. Plants native only to another part of the state (for example north Florida or the panhandle for a south-east Florida site) must be replaced.\n' +
+    '3. HABITAT: light, soil, drainage and moisture needs fit the site and the sun selected. Moisture-loving, shade-loving or wetland plants do not fit a dry, sunny, sandy site or a Water savings goal, and "drought-tolerant" must be true for that species.\n' +
+    '4. LIFECYCLE: the Lifecycle tag is correct (annual vs perennial vs biennial).\n' +
+    '5. LAYER: the plant sits in the right LAYER for its real height and form (Groundcover only if under about 1 foot; herbaceous wildflowers are not Shrubs; Canopy/Trees only for trees).\n' +
+    '6. CLAIMS: size, wildlife and insect statements are well documented. Delete or fix any unverified claim (for example about ladybugs or parasitic wasps). Milkweed must be a locally native species.\n' +
+    '7. State-listed endangered or threatened plants carry a short sourcing note (buy only nursery-propagated stock).\n' +
+    '8. Tree size fits the yard size.\n' +
+    '9. TIMELINE: the planting season fits the climate. In dry-summer climates (Pacific Northwest, California) the main planting season is fall. In wet-summer climates such as Florida and the Gulf Coast the main planting season is the start of the wet season (June–July): new plants go in during the Summer entry, and Fall, Winter and Spring cover maintenance, seed sowing and light watering of plants already installed. If the timeline schedules main planting in the wrong season, rewrite the affected bullets with timeline_fixes. The timeline must also agree with itself and name only plants that are in the list.\n\n' +
     'KNOWN MISTAKES TO CATCH:\n- ' + KNOWN_MISTAKES.join('\n- ') + '\n\n' +
     'PLANTS (numbered in order):\n' + plantLines.map(function (l, i) { return (i + 1) + '. ' + l.trim(); }).join('\n') + '\n\n' +
     'PLANTING TIMELINE:\n' + timeline.trim() + '\n\n' +
     'Reply with ONLY a JSON object, no other text:\n' +
-    '{"plant_fixes":[{"n":<plant number>,"new_line":"<the complete corrected plant line, starting with \\"- \\", in the EXACT same format as the original: Common Name (Scientific name) — description. Mature size: ... [Indigenous-use sentence if present]. Attracts: ... Lifecycle: ...>"}],' +
+    '{"notes":"<one short sentence per problem found, or \\"none\\">","plant_fixes":[{"n":<plant number>,"new_line":"<the complete corrected plant line, starting with \\"- \\", in the EXACT same format as the original: Common Name (Scientific name) — description. Mature size: ... [Indigenous-use sentence if present]. Attracts: ... Lifecycle: ...>"}],' +
     '"timeline_fixes":[{"find":"<exact text copied from the timeline, appearing once>","replace":"<corrected text>"}]}\n' +
-    'Rules for fixes: for a wrong name or fact, correct the line but keep its length, style and format. If a plant does not fit the site, replace it with a different native plant that does fit (same layer, not already in the list) written in the same format. Keep the writing plain-language. If you replace or rename a plant, include timeline_fixes for every timeline mention of the old plant. If nothing needs fixing return {"plant_fixes":[],"timeline_fixes":[]}.';
+    'Rules for fixes: for a wrong name or fact, correct the line but keep its length, style and format. If a plant does not fit the site or area, replace it with a different plant that is native to this specific area, fits the site, is in the same layer and is not already in the list, written in the same format, same level of detail. Keep the writing plain-language. If you replace or rename a plant, include timeline_fixes for every timeline mention of the old plant. If nothing needs fixing return {"notes":"none","plant_fixes":[],"timeline_fixes":[]}.';
 }
 
 function parseJson(s) {
@@ -216,7 +218,7 @@ function applyReview(t, review) {
   plantsBlock = lines.join('\n');
   (Array.isArray(review.timeline_fixes) ? review.timeline_fixes : []).forEach(function (f) {
     if (!f || typeof f.find !== 'string' || typeof f.replace !== 'string') return;
-    if (f.find.length < 4 || f.replace.length > 800) return;
+    if (f.find.length < 4 || f.replace.length > 1500) return;
     const first = timeline.indexOf(f.find);
     if (first === -1 || timeline.indexOf(f.find, first + 1) !== -1) return;
     timeline = timeline.slice(0, first) + f.replace + timeline.slice(first + f.find.length);
@@ -232,22 +234,25 @@ async function reviewGreenprint(apiKey, t, siteDetails, usageAcc) {
   const plantLines = t.slice(sec.ps.start, sec.ps.end).split('\n').filter(function (l) { return l.trim().startsWith('-'); });
   const timeline = t.slice(sec.tStart, sec.tEnd);
   const prompt = buildReviewPrompt(siteDetails, plantLines, timeline);
+  let lastNotes = '';
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await callClaude(apiKey, STRONG, 3000, [{ role: 'user', content: prompt }], usageAcc);
+      const r = await callClaude(apiKey, STRONG, 4000, [{ role: 'user', content: prompt }], usageAcc);
       const review = parseJson(r.text);
-      if (!review) { console.log('Reviewer reply not parseable (attempt ' + (attempt + 1) + ')'); continue; }
+      if (!review) { console.log('Reviewer reply not parseable (attempt ' + (attempt + 1) + ')'); lastNotes = 'unparseable reply'; continue; }
       const applied = applyReview(t, review);
+      const notes = String(review.notes || '').slice(0, 1200);
+      const proposed = (Array.isArray(review.plant_fixes) ? review.plant_fixes.length : 0) + (Array.isArray(review.timeline_fixes) ? review.timeline_fixes.length : 0);
       if (applied.changed > 0 && structureProblem(applied.text, false)) {
         console.log('Reviewed text failed structure check; discarding review edits.');
-        return { text: t, changed: 0, ok: true };
+        return { text: t, changed: 0, ok: true, notes: notes, proposed: proposed, discarded: true };
       }
-      return { text: applied.text, changed: applied.changed, ok: true };
+      return { text: applied.text, changed: applied.changed, ok: true, notes: notes, proposed: proposed };
     } catch (e) {
       console.log('Reviewer attempt ' + (attempt + 1) + ' failed: ' + e.message);
     }
   }
-  return { text: t, changed: 0, ok: false };
+  return { text: t, changed: 0, ok: false, notes: lastNotes || 'reviewer failed', proposed: 0 };
 }
 
 // ---------- usage meter ----------
@@ -310,7 +315,7 @@ exports.handler = async function (event) {
     }
 
     const isMismatch = /PHOTO_MISMATCH:/.test(text);
-    let reviewed = 0, usedRewrite = false, reviewerOk = true;
+    let reviewed = 0, usedRewrite = false, reviewerOk = true, reviewerRan = false, reviewerNotes = '', reviewerProposed = 0;
     if (!isMismatch) {
       // structure check -> Sonnet full rewrite (rare)
       let problem = structureProblem(text, truncated);
@@ -330,7 +335,7 @@ exports.handler = async function (event) {
 
       if (!structureProblem(text, truncated)) {
         const rv = await reviewGreenprint(API_KEY, text, siteDetails, usage);
-        text = rv.text; reviewed = rv.changed; reviewerOk = rv.ok;
+        text = rv.text; reviewed = rv.changed; reviewerOk = rv.ok; reviewerRan = true; reviewerNotes = rv.notes || ''; reviewerProposed = rv.proposed || 0;
         text = applyCodeFixes(text);
       }
     }
@@ -361,6 +366,7 @@ exports.handler = async function (event) {
       status: 'done',
       body: JSON.stringify({ content: [{ type: 'text', text: text }] }),
       warning: warning,
+      debug: { cost: cost, usage: usage, writer: WRITER, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes },
       promo: auth.k === 'promo',
       buyLink: auth.k === 'promo' && newCount >= RUN_CAP ? BUY_LINK : ''
     });
