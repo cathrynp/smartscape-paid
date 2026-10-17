@@ -172,10 +172,18 @@ function getTimeline(t) {
   if (!sec) return '';
   return t.slice(sec.tStart, sec.tEnd).replace(/^PLANTING TIMELINE:?\s*/, '').trim();
 }
-function validPlantLine(nl) {
-  return typeof nl === 'string' && nl.indexOf('\n') === -1 && nl.length >= 80 && nl.length <= 1800 && nl.startsWith('- ') &&
-    /\([^)]+\)/.test(nl) && nl.indexOf('Attracts:') !== -1 && /Lifecycle:\s*(Perennial|Annual|Biennial)/i.test(nl);
+function plantLineProblem(nl) {
+  if (typeof nl !== 'string' || !nl) return 'no entry returned';
+  if (nl.indexOf('\n') !== -1) return 'more than one line';
+  if (nl.length < 80) return 'too short (' + nl.length + ')';
+  if (nl.length > 1800) return 'too long (' + nl.length + ')';
+  if (!nl.startsWith('- ')) return 'does not start with "- "';
+  if (!/\([^)]+\)/.test(nl)) return 'no (Scientific name)';
+  if (nl.indexOf('Attracts:') === -1) return 'missing "Attracts:"';
+  if (!/Lifecycle:\s*(Perennial|Annual|Biennial)/i.test(nl)) return 'missing "Lifecycle: Perennial/Annual/Biennial"';
+  return '';
 }
+function validPlantLine(nl) { return !plantLineProblem(nl); }
 // Swap the n-th plant line (1-based) for a new one; returns new text or null.
 function setPlantLine(t, n, nl) {
   const sec = splitSections(t);
@@ -240,16 +248,24 @@ function rewritePlantsPrompt(siteDetails, flagged, usedNames) {
 }
 function parseBlocks(s) {
   const out = {};
-  const re = /###\s*(\d+)\s*\n([^\n]+)/g;
-  let m;
-  while ((m = re.exec(s))) out[parseInt(m[1], 10)] = m[2].trim();
+  const lines = String(s || '').split('\n');
+  let cur = null;
+  for (let i = 0; i < lines.length; i++) {
+    const h = lines[i].match(/^\s*#{1,4}\s*(?:n\s*=\s*)?(\d+)\s*:?\s*$/i);
+    if (h) { cur = parseInt(h[1], 10); continue; }
+    if (cur !== null && lines[i].trim()) {
+      let l = lines[i].trim().replace(/^[-*•]\s*/, '');
+      out[cur] = '- ' + l;
+      cur = null;
+    }
+  }
   return out;
 }
 async function rewritePlants(apiKey, model, siteDetails, flagged, usedNames, usage) {
   try {
     const r = await callClaude(apiKey, model, Math.min(5000, 400 + flagged.length * 450), [{ role: 'user', content: rewritePlantsPrompt(siteDetails, flagged, usedNames) }], usage);
-    return parseBlocks(r.text);
-  } catch (e) { console.log('Plant rewrite (' + model + ') failed: ' + e.message); return {}; }
+    return { blocks: parseBlocks(r.text), raw: String(r.text || '').slice(0, 6000), truncated: !!r.truncated };
+  } catch (e) { console.log('Plant rewrite (' + model + ') failed: ' + e.message); return { blocks: {}, raw: 'ERROR: ' + e.message, truncated: false }; }
 }
 
 function rewriteTimelinePrompt(siteDetails, timeline, problems, plantNames) {
@@ -260,15 +276,30 @@ async function rewriteTimeline(apiKey, model, siteDetails, timeline, problems, p
   try {
     const r = await callClaude(apiKey, model, 2500, [{ role: 'user', content: rewriteTimelinePrompt(siteDetails, timeline, problems, plantNames) }], usage);
     const t = r.text.trim();
-    if (r.truncated || t.length < 300 || missingSeasons('PLANTING TIMELINE\n' + t).length || !/^-\s/m.test(t)) return null;
-    return t;
-  } catch (e) { console.log('Timeline rewrite (' + model + ') failed: ' + e.message); return null; }
+    const raw = t.slice(0, 6000);
+    if (r.truncated) return { text: null, raw: raw, reason: 'reply truncated' };
+    if (t.length < 300) return { text: null, raw: raw, reason: 'too short (' + t.length + ')' };
+    const miss = missingSeasons('PLANTING TIMELINE\n' + t);
+    if (miss.length) return { text: null, raw: raw, reason: 'missing seasons: ' + miss.join(',') };
+    if (!/^-\s/m.test(t)) return { text: null, raw: raw, reason: 'no "- " bullets' };
+    return { text: t, raw: raw, reason: '' };
+  } catch (e) { console.log('Timeline rewrite (' + model + ') failed: ' + e.message); return { text: null, raw: 'ERROR: ' + e.message, reason: 'error: ' + e.message }; }
+}
+
+// Code check: in Florida / Gulf Coast the main planting belongs in the Summer entry, not Fall.
+function seasonProblem(timeline, siteDetails) {
+  if (!/Florida|\bFL\b|Gulf Coast/i.test(siteDetails || '')) return '';
+  const fall = (timeline.match(/Fall[^\n]*\n([\s\S]*?)(?=\nWinter)/i) || [, ''])[1];
+  const summer = (timeline.match(/Summer[^\n]*\n([\s\S]*)$/i) || [, ''])[1];
+  const act = /\b(plant|install|transplant)\w*\b/i;
+  if (act.test(fall) && !act.test(summer)) return 'Main planting is placed in Fall. For Florida it must be at the start of the wet season (June–July) in the Summer entry; Fall, Winter and Spring are for maintenance, seed sowing and light watering of installed plants.';
+  return '';
 }
 
 // Sonnet judges (sure errors only); Haiku rewrites sure-flagged plants; Sonnet re-checks those rewrites and writes only what is still wrong;
-// the timeline is corrected LAST, once, against the final plant list.
+// the timeline is corrected LAST, once, against the final plant list. Every model reply and every accept/reject decision is saved in detail.
 async function reviewGreenprint(apiKey, t, siteDetails, usage) {
-  const detail = { original: t, judgeRaw: '', recheckRaw: '', flaggedSure: [], flaggedUnsure: [], timelineProblems: 0, rewritten: 0, replacedPlants: 0, timelineRewritten: false, recheckFlagged: 0, escalated: 0, judgeNotes: '', recheckNotes: '' };
+  const detail = { original: t, judgeRaw: '', recheckRaw: '', plantRewriteRaw: '', escalationRaw: '', timelineRaw: '', decisions: [], flaggedSure: [], flaggedUnsure: [], timelineProblems: 0, seasonProblem: '', rewritten: 0, replacedPlants: 0, timelineRewritten: false, timelineDecision: '', recheckFlagged: 0, escalated: 0, judgeNotes: '', recheckNotes: '' };
   const sec = splitSections(t);
   if (!sec) return { text: t, changed: 0, ok: false, notes: 'no sections', proposed: 0, detail: detail };
   const plants = getPlantLines(t).map(function (line, i) { return { n: i + 1, line: line }; });
@@ -281,28 +312,44 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
   detail.flaggedSure = sure.map(function (x) { return x.n; });
   detail.flaggedUnsure = j1.plants.filter(function (x) { return !x.sure; }).map(function (x) { return x.n; });
   detail.timelineProblems = j1.timeline.length;
+  detail.seasonProblem = seasonProblem(timeline, siteDetails);
   detail.judgeNotes = j1.notes + ' | ' + j1.plants.map(function (x) { return x.n + (x.sure ? '(sure)' : '(unsure)') + ': ' + x.problem; }).join(' ; ') + (j1.timeline.length ? ' | TIMELINE: ' + j1.timeline.join(' ; ') : '');
-  if (!sure.length && !j1.timeline.length) return { text: t, changed: 0, ok: true, notes: 'none', proposed: 0, detail: detail };
+  if (!sure.length && !j1.timeline.length && !detail.seasonProblem) return { text: t, changed: 0, ok: true, notes: 'none', proposed: 0, detail: detail };
 
   let text = t, changed = 0, plantNamesChanged = false;
   const timelineProblems = j1.timeline.slice();
+  if (detail.seasonProblem) timelineProblems.push(detail.seasonProblem);
   const lineOf = {};
   plants.forEach(function (p) { lineOf[p.n] = p.line; });
 
-  // Haiku rewrites the sure-flagged plant entries
+  // Apply one set of replacement entries, recording accept/reject + reason for each
+  function applyBlocks(round, flagged, blocks) {
+    let applied = 0;
+    flagged.forEach(function (f) {
+      const nl = blocks[f.n];
+      const why = plantLineProblem(nl);
+      const dec = { round: round, n: f.n, problem: f.problem, before: f.line, after: nl || '', accepted: false, reason: why };
+      if (!why) {
+        const next = setPlantLine(text, f.n, nl);
+        if (!next) dec.reason = 'could not place the entry in the list';
+        else {
+          if (sciName(nl) !== sciName(f.line)) { detail.replacedPlants++; plantNamesChanged = true; }
+          text = next; changed++; applied++; dec.accepted = true; dec.reason = 'accepted';
+        }
+      }
+      detail.decisions.push(dec);
+    });
+    return applied;
+  }
+
   const rewrittenNs = [];
   if (sure.length) {
     const flagged = sure.map(function (x) { return { n: x.n, problem: x.problem, line: lineOf[x.n] }; });
     const used = plants.map(function (p) { return sciName(p.line); }).filter(Boolean);
-    const blocks = await rewritePlants(apiKey, WRITER, siteDetails, flagged, used, usage);
-    flagged.forEach(function (f) {
-      const nl = blocks[f.n];
-      if (!validPlantLine(nl)) return;
-      const next = setPlantLine(text, f.n, nl);
-      if (!next) return;
-      if (sciName(nl) !== sciName(f.line)) { detail.replacedPlants++; plantNamesChanged = true; }
-      text = next; rewrittenNs.push(f.n); changed++;
-    });
+    const rw = await rewritePlants(apiKey, WRITER, siteDetails, flagged, used, usage);
+    detail.plantRewriteRaw = rw.raw;
+    applyBlocks('haiku', flagged, rw.blocks);
+    detail.decisions.forEach(function (d) { if (d.round === 'haiku' && d.accepted) rewrittenNs.push(d.n); });
     detail.rewritten = rewrittenNs.length;
   }
 
@@ -319,24 +366,29 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
       if (still.length) {
         const flagged2 = still.map(function (x) { return { n: x.n, problem: x.problem, line: nowPlants[x.n - 1].line }; });
         const used2 = nowPlants.map(function (p) { return sciName(p.line); }).filter(Boolean);
-        const blocks2 = await rewritePlants(apiKey, STRONG, siteDetails, flagged2, used2, usage);
-        flagged2.forEach(function (f) {
-          const nl = blocks2[f.n];
-          if (!validPlantLine(nl)) return;
-          const next = setPlantLine(text, f.n, nl);
-          if (next) { if (sciName(nl) !== sciName(f.line)) plantNamesChanged = true; text = next; detail.escalated++; changed++; }
-        });
+        const rw2 = await rewritePlants(apiKey, STRONG, siteDetails, flagged2, used2, usage);
+        detail.escalationRaw = rw2.raw;
+        detail.escalated = applyBlocks('sonnet', flagged2, rw2.blocks);
       }
     }
   }
 
   // Timeline LAST: one Haiku pass against the final plant list
-  if (timelineProblems.length || plantNamesChanged) {
+  const seasonNow = seasonProblem(getTimeline(text), siteDetails);
+  if (timelineProblems.length || plantNamesChanged || seasonNow) {
     const problems = timelineProblems.slice();
+    if (seasonNow && problems.indexOf(seasonNow) === -1) problems.push(seasonNow);
     if (plantNamesChanged) problems.push('Some plants in the list were replaced. Make every timeline bullet refer only to plants in the final list (use their common names exactly as listed) and remove any plant that is no longer listed.');
     const names = getPlantLines(text).map(function (l) { return (l.match(/^-\s*(.+?)\s*\(/) || [, l])[1]; });
-    const nt = await rewriteTimeline(apiKey, WRITER, siteDetails, getTimeline(text), problems, names, usage);
-    if (nt) { const next = setTimeline(text, nt); if (next && !structureProblem(next, false)) { text = next; detail.timelineRewritten = true; changed++; } }
+    const tr = await rewriteTimeline(apiKey, WRITER, siteDetails, getTimeline(text), problems, names, usage);
+    detail.timelineRaw = tr.raw;
+    if (!tr.text) detail.timelineDecision = 'rejected: ' + tr.reason;
+    else {
+      const next = setTimeline(text, tr.text);
+      if (!next) detail.timelineDecision = 'rejected: could not place timeline';
+      else if (structureProblem(next, false)) detail.timelineDecision = 'rejected: structure check: ' + structureProblem(next, false);
+      else { text = next; detail.timelineRewritten = true; changed++; detail.timelineDecision = 'accepted'; }
+    }
   }
 
   if (changed && structureProblem(text, false)) return { text: t, changed: 0, ok: true, notes: 'edits discarded: structure check failed', proposed: sure.length, detail: detail };
