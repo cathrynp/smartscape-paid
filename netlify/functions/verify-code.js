@@ -12,6 +12,7 @@ const SITE_ID = '58059f0f-bc4f-4cec-8963-b609550a12e6';
 const PRODUCT_ID = 'FNqEFzXXRqr-uM1-cgu0iQ==';
 const DEVICE_CAP = 3;
 const PROMO_LIMITS = { 'VIPACCESS': 55, 'EARLYACCESS': 55 };
+const ADMIN_HASHES = ['0cfd7533e3803b1237823abae718a13b6ff2b01f52be2ea16382ddd81115898a'];
 const BETA_HASHES = [
   'e8a6ce7f75e52647ef6e7364cc6cf50ba137649178ce0e37967775dda177150a',
   'a9962213c985e1392ef26046b0d96d936f7cdd21a0339ac646678d9ae4e2329e'
@@ -74,6 +75,9 @@ exports.handler = async function (event) {
 
     // ---------- Beta keys (hashed) ----------
     const hash = sha256(code);
+    if (ADMIN_HASHES.indexOf(hash) !== -1) {
+      return reply({ valid: true, kind: 'admin', token: makeToken({ k: 'admin', id: 'admin', d: deviceId, t: Date.now() }) });
+    }
     if (BETA_HASHES.indexOf(hash) !== -1) {
       return reply({
         valid: true,

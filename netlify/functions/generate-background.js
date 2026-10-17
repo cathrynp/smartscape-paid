@@ -365,7 +365,7 @@ exports.handler = async function (event) {
 
     // ----- access + cap -----
     const auth = readToken(incoming.token);
-    if (!auth || (auth.k !== 'promo' && auth.k !== 'lic') || !auth.id) {
+    if (!auth || (auth.k !== 'promo' && auth.k !== 'lic' && auth.k !== 'admin') || !auth.id) {
       await store.setJSON(jobId, { status: 'auth', message: 'Please enter your license key to continue.' });
       return { statusCode: 202, body: '' };
     }
@@ -373,7 +373,7 @@ exports.handler = async function (event) {
     const mKey = meterKey(auth);
     const rec = await meter.get(mKey, { type: 'json' });
     const used = (rec && rec.count) || 0;
-    if (used >= RUN_CAP) {
+    if (auth.k !== 'admin' && used >= RUN_CAP) {
       const promo = auth.k === 'promo';
       await store.setJSON(jobId, {
         status: 'limit',
@@ -430,7 +430,7 @@ exports.handler = async function (event) {
 
     // ----- count the run (not for photo mismatches) -----
     let newCount = used, warning = '';
-    if (!isMismatch) {
+    if (!isMismatch && auth.k !== 'admin') {
       newCount = used + 1;
       try { await meter.setJSON(mKey, { count: newCount, updated: new Date().toISOString() }); } catch (e) { console.log('Meter write failed: ' + e.message); }
       const left = RUN_CAP - newCount;
