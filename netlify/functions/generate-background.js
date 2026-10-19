@@ -8,9 +8,27 @@ const { connectLambda, getStore } = require('@netlify/blobs');
 const { readToken } = require('./lib/auth');
 
 const SITE_ID = '58059f0f-bc4f-4cec-8963-b609550a12e6';
-const WRITER = 'claude-haiku-4-5-20251001';
-const STRONG = 'claude-sonnet-4-6';
-const PRICES = { 'claude-haiku-4-5-20251001': [1, 5], 'claude-sonnet-4-6': [3, 15] }; // $ per million tokens (in, out)
+// ============ MODEL SETTINGS — the one place to change models ============
+// Rule: use the lowest-cost model that works for each job. Each list is tried in order; if Anthropic rejects
+// a model ID (retired / unknown), the next one is used automatically. Cheapest first.
+// Prices ($ per million tokens: input, output) last checked 2026-10-18. Haiku 5.5: VentureBeat + eesel (prompts under 100k tokens).
+// Sonnet 5.5: third-party listing only (not yet confirmed on Anthropic's pricing page). Unknown models are costed at the highest price below.
+const PRICES = {
+  'claude-haiku-5-5': [0.10, 0.50],
+  'claude-haiku-4-5-20251001': [1, 5],
+  'claude-sonnet-5-5': [2, 10],
+  'claude-sonnet-4-6': [3, 15]
+};
+const CHEAP = ['claude-haiku-5-5', 'claude-haiku-4-5-20251001'];
+const STRONGER = ['claude-sonnet-5-5', 'claude-sonnet-4-6'];
+const TASK_MODELS = {
+  write: CHEAP,        // writes the Greenprint
+  judge: CHEAP,        // checks plants and timeline for definite errors (tested against Sonnet; change to STRONGER if it misses real errors)
+  rewrite: CHEAP,      // rewrites flagged plant entries and the timeline
+  escalate: STRONGER,  // only for entries the cheap model could not fix
+  fullRewrite: STRONGER // only when the writer's output fails the structure check
+};
+// ========================================================================
 const RUN_CAP = 10;       // Greenprints per month per license / lifetime per promo redemption
 const WARN_AT = 8;        // show a heads-up once this many are used
 const BUY_LINK = 'https://smartscape.gumroad.com/l/greenprint';
@@ -113,30 +131,43 @@ function structureProblem(t, truncated) {
 }
 
 // ---------- Anthropic calls (quiet retries) ----------
-async function callClaude(apiKey, model, maxTokens, messages, usageAcc, system) {
+const DEAD_MODELS = {}; // model IDs Anthropic rejected during this function's lifetime
+async function callClaude(apiKey, modelOrList, maxTokens, messages, usageAcc, system) {
+  let models = Array.isArray(modelOrList) ? modelOrList : [modelOrList];
+  const alive = models.filter(function (m) { return !DEAD_MODELS[m]; });
+  if (alive.length) models = alive;
   let lastErr;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const body = { model: model, max_tokens: maxTokens, messages: messages };
-      if (system) body.system = system;
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify(body)
-      });
-      const raw = await resp.text();
-      if (resp.status === 200) {
-        const parsed = JSON.parse(raw);
-        usagePlus(usageAcc, model, parsed.usage);
-        return {
-          text: (parsed.content && parsed.content[0] && parsed.content[0].text) || '',
-          truncated: parsed.stop_reason === 'max_tokens'
-        };
-      }
-      lastErr = new Error('Anthropic ' + resp.status + ': ' + raw.slice(0, 200));
-      if (resp.status < 500 && resp.status !== 429) break;
-    } catch (e) { lastErr = e; }
-    await new Promise(function (r) { setTimeout(r, 2000 * (attempt + 1)); });
+  for (let mi = 0; mi < models.length; mi++) {
+    const model = models[mi];
+    let modelRejected = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const body = { model: model, max_tokens: maxTokens, messages: messages };
+        if (system) body.system = system;
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify(body)
+        });
+        const raw = await resp.text();
+        if (resp.status === 200) {
+          const parsed = JSON.parse(raw);
+          usagePlus(usageAcc, model, parsed.usage);
+          return {
+            text: (parsed.content && parsed.content[0] && parsed.content[0].text) || '',
+            truncated: parsed.stop_reason === 'max_tokens',
+            model: model
+          };
+        }
+        lastErr = new Error('Anthropic ' + resp.status + ' (' + model + '): ' + raw.slice(0, 200));
+        // unknown / retired / unavailable model -> try the next model in the list
+        if (resp.status === 404 || (resp.status === 400 && /model/i.test(raw))) { modelRejected = true; DEAD_MODELS[model] = true; break; }
+        if (resp.status < 500 && resp.status !== 429) break;
+      } catch (e) { lastErr = e; }
+      await new Promise(function (r) { setTimeout(r, 2000 * (attempt + 1)); });
+    }
+    if (!modelRejected && mi < models.length - 1 && lastErr && /Anthropic (5|429)/.test(String(lastErr.message))) continue; // overloaded: try next model too
+    if (!modelRejected) break;
   }
   throw lastErr || new Error('Anthropic call failed');
 }
@@ -184,6 +215,34 @@ function plantLineProblem(nl) {
   if (!/Lifecycle:\s*(Perennial|Annual|Biennial)/i.test(nl)) return 'missing "Lifecycle: Perennial/Annual/Biennial"';
   return '';
 }
+// ---------- yard-size check (free, in code) ----------
+// Maximum mature height (ft) a plant may have for the yard size; null = no limit.
+function yardClass(siteDetails) {
+  const m = String(siteDetails || '').match(/Yard size:\s*([^\n]+)/i);
+  const s = m ? m[1] : '';
+  if (/under\s*500/i.test(s)) return 'tiny';
+  if (/^\s*500/.test(s)) return 'small';
+  if (/1,500\s*[–-]\s*5,000/.test(s)) return 'medium';
+  if (/5,000\s*\+/.test(s)) return 'large';
+  return '';
+}
+function heightLimit(siteDetails) {
+  const c = yardClass(siteDetails);
+  return c === 'tiny' ? 30 : c === 'small' ? 40 : c === 'medium' ? 60 : null;
+}
+// First height-like number (upper end of a range) in the "Mature size:" part of an entry; null if none found.
+function plantMaxHeight(line) {
+  const m = String(line || '').match(/Mature size:\s*([^]*?)(?:Attracts:|$)/i);
+  if (!m) return null;
+  const h = m[1].match(/(\d+(?:\.\d+)?)\s*(?:[–-]\s*(\d+(?:\.\d+)?))?\s*(?:\+\s*)?(?:ft|feet|foot)\b/i);
+  if (!h) return null;
+  return parseFloat(h[2] || h[1]);
+}
+function tooTall(line, limit) {
+  if (!limit) return 0;
+  const h = plantMaxHeight(line);
+  return h !== null && h > limit ? h : 0;
+}
 function validPlantLine(nl) { return !plantLineProblem(nl); }
 // Swap the n-th plant line (1-based) for a new one; returns new text or null.
 function setPlantLine(t, n, nl) {
@@ -227,7 +286,7 @@ function judgePrompt(siteDetails, plants, timeline, shortMode) {
 async function judge(apiKey, siteDetails, plants, timeline, usage) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const r = await callClaude(apiKey, STRONG, 1500, [{ role: 'user', content: judgePrompt(siteDetails, plants, timeline, attempt > 0) }], usage);
+      const r = await callClaude(apiKey, TASK_MODELS.judge, 1500, [{ role: 'user', content: judgePrompt(siteDetails, plants, timeline, attempt > 0) }], usage);
       const j = parseJson(r.text);
       if (j && !r.truncated) {
         const valid = {};
@@ -290,18 +349,34 @@ async function rewriteTimeline(apiKey, model, siteDetails, timeline, problems, p
 // Sonnet judges (sure errors only); Haiku rewrites sure-flagged plants; Sonnet re-checks those rewrites and writes only what is still wrong;
 // the timeline is corrected LAST, once, against the final plant list. Every model reply and every accept/reject decision is saved in detail.
 async function reviewGreenprint(apiKey, t, siteDetails, usage) {
-  const detail = { original: t, judgeRaw: '', recheckRaw: '', plantRewriteRaw: '', escalationRaw: '', timelineRaw: '', decisions: [], flaggedSure: [], flaggedUnsure: [], timelineProblems: 0, rewritten: 0, replacedPlants: 0, timelineRewritten: false, timelineDecision: '', recheckFlagged: 0, escalated: 0, judgeNotes: '', recheckNotes: '' };
+  const detail = { sizeFlags: [], original: t, judgeRaw: '', recheckRaw: '', retryRaw: '', plantRewriteRaw: '', escalationRaw: '', timelineRaw: '', decisions: [], flaggedSure: [], flaggedUnsure: [], timelineProblems: 0, rewritten: 0, replacedPlants: 0, timelineRewritten: false, timelineDecision: '', recheckFlagged: 0, escalated: 0, judgeNotes: '', recheckNotes: '' };
   const sec = splitSections(t);
   if (!sec) return { text: t, changed: 0, ok: false, notes: 'no sections', proposed: 0, detail: detail };
   const plants = getPlantLines(t).map(function (line, i) { return { n: i + 1, line: line }; });
   const timeline = getTimeline(t);
 
-  const j1 = await judge(apiKey, siteDetails, plants, timeline, usage);
+  let j1 = await judge(apiKey, siteDetails, plants, timeline, usage);
   detail.judgeRaw = j1.raw || '';
-  if (!j1.ok) return { text: t, changed: 0, ok: false, notes: j1.notes, proposed: 0, detail: detail };
+  if (!j1.ok) {
+    // the judge is unusable, but the free size check can still act
+    const lim0 = heightLimit(siteDetails);
+    if (!plants.some(function (p) { return tooTall(p.line, lim0); })) return { text: t, changed: 0, ok: false, notes: j1.notes, proposed: 0, detail: detail };
+    j1 = { ok: false, plants: [], timeline: [], notes: j1.notes };
+  }
   const sureMap = {};
   j1.plants.forEach(function (x) { if (!x.sure) return; if (sureMap[x.n]) sureMap[x.n].problem += ' ; ' + x.problem; else sureMap[x.n] = { n: x.n, sure: true, problem: x.problem }; });
-  const sure = Object.keys(sureMap).map(function (k) { return sureMap[k]; });
+  // free code check: plants too tall for the yard
+  const limit = heightLimit(siteDetails);
+  const sizeFlags = [];
+  plants.forEach(function (p) {
+    const h = tooTall(p.line, limit);
+    if (!h) return;
+    sizeFlags.push(p.n);
+    const msg = 'Mature height up to ' + h + ' ft is too tall for this yard (limit ' + limit + ' ft); choose a plant that stays under ' + (limit - 10) + ' ft.';
+    if (sureMap[p.n]) sureMap[p.n].problem += ' ; ' + msg; else sureMap[p.n] = { n: p.n, sure: true, problem: msg };
+  });
+  detail.sizeFlags = sizeFlags;
+  const sure = Object.keys(sureMap).map(function (k) { return sureMap[k]; }).sort(function (a, b) { return a.n - b.n; });
   detail.flaggedSure = sure.map(function (x) { return x.n; });
   detail.flaggedUnsure = j1.plants.filter(function (x) { return !x.sure; }).map(function (x) { return x.n; });
   detail.timelineProblems = j1.timeline.length;
@@ -320,6 +395,7 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
       const cands = blocks[f.n] || [];
       let nl = cands.filter(function (c) { return !plantLineProblem(c); })[0] || cands[0];
       let why = plantLineProblem(nl);
+      if (!why && limit && tooTall(nl, limit)) why = 'too tall for this yard: ' + tooTall(nl, limit) + ' ft (limit ' + limit + ' ft)';
       if (!why && sciName(nl) && getPlantLines(text).some(function (l, k) { return k !== f.n - 1 && sciName(l) === sciName(nl); })) why = 'duplicate: that plant is already in the list';
       const dec = { round: round, n: f.n, problem: f.problem, before: f.line, after: nl || '', accepted: false, reason: why };
       if (!why) {
@@ -339,7 +415,7 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
   if (sure.length) {
     const flagged = sure.map(function (x) { return { n: x.n, problem: x.problem, line: lineOf[x.n] }; });
     const used = plants.map(function (p) { return sciName(p.line); }).filter(Boolean);
-    const rw = await rewritePlants(apiKey, WRITER, siteDetails, flagged, used, usage);
+    const rw = await rewritePlants(apiKey, TASK_MODELS.rewrite, siteDetails, flagged, used, usage);
     detail.plantRewriteRaw = rw.raw;
     applyBlocks('haiku', flagged, rw.blocks);
     detail.decisions.forEach(function (d) { if (d.round === 'haiku' && d.accepted) rewrittenNs.push(d.n); });
@@ -369,9 +445,21 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
     detail.recheckFlagged = flagged2.length;
     if (flagged2.length) {
       const used2 = nowPlants.map(function (p) { return sciName(p.line); }).filter(Boolean);
-      const rw2 = await rewritePlants(apiKey, STRONG, siteDetails, flagged2, used2, usage);
+      const rw2 = await rewritePlants(apiKey, TASK_MODELS.escalate, siteDetails, flagged2, used2, usage);
       detail.escalationRaw = rw2.raw;
       detail.escalated = applyBlocks('sonnet', flagged2, rw2.blocks);
+      // one more try, with the rejection reason spelled out, for entries still not replaced
+      const failed = flagged2.filter(function (f) { return !detail.decisions.some(function (d) { return d.round === 'sonnet' && d.n === f.n && d.accepted; }); });
+      if (failed.length) {
+        const retry = failed.map(function (f) {
+          const last = detail.decisions.filter(function (d) { return d.round === 'sonnet' && d.n === f.n; }).pop();
+          return { n: f.n, problem: f.problem + ' ; YOUR PREVIOUS ANSWER WAS REJECTED: ' + (last ? last.reason : 'no valid entry') + '. Choose a different plant that avoids this.', line: f.line };
+        });
+        const used3 = getPlantLines(text).map(function (l) { return sciName(l); }).filter(Boolean);
+        const rw3 = await rewritePlants(apiKey, TASK_MODELS.escalate, siteDetails, retry, used3, usage);
+        detail.retryRaw = rw3.raw;
+        detail.escalated += applyBlocks('sonnet-retry', retry, rw3.blocks);
+      }
     }
   }
 
@@ -380,7 +468,7 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
     const problems = timelineProblems.slice();
     if (plantNamesChanged) problems.push('Some plants in the list were replaced. Make every timeline bullet refer only to plants in the final list (use their common names exactly as listed) and remove any plant that is no longer listed.');
     const names = getPlantLines(text).map(function (l) { return (l.match(/^-\s*(.+?)\s*\(/) || [, l])[1]; });
-    const tr = await rewriteTimeline(apiKey, WRITER, siteDetails, getTimeline(text), problems, names, usage);
+    const tr = await rewriteTimeline(apiKey, TASK_MODELS.rewrite, siteDetails, getTimeline(text), problems, names, usage);
     detail.timelineRaw = tr.raw;
     if (!tr.text) detail.timelineDecision = 'rejected: ' + tr.reason;
     else {
@@ -444,13 +532,25 @@ exports.handler = async function (event) {
     const sd = promptText.match(/Site details:\n([\s\S]*?)\n\s*If you are not certain/);
     const siteDetails = sd ? sd[1] : promptText.slice(0, 600);
 
+    // yard-size rule appended to what the writer sees
+    const limitFt = heightLimit(siteDetails);
+    let writerMessages = messages;
+    if (limitFt) {
+      const extra = '\n\nSIZE RULE: this yard is small. Do not recommend any plant whose mature height is more than ' + (limitFt - 10) + ' feet (no large forest trees such as pines or tall oaks). Choose smaller trees, shrubs, grasses and wildflowers that fit the yard.';
+      writerMessages = messages.map(function (m, i) {
+        if (i !== 0) return m;
+        if (typeof m.content === 'string') return { role: m.role, content: m.content + extra };
+        return { role: m.role, content: m.content.concat([{ type: 'text', text: extra }]) };
+      });
+    }
+    let writerModel = '';
     let text, truncated;
     try {
-      const w = await callClaude(API_KEY, WRITER, 6000, messages, usage);
-      text = w.text; truncated = w.truncated;
+      const w = await callClaude(API_KEY, TASK_MODELS.write, 6000, writerMessages, usage);
+      text = w.text; truncated = w.truncated; writerModel = w.model;
     } catch (e) {
-      console.log('Haiku writer failed after retries, using Sonnet: ' + e.message);
-      const w = await callClaude(API_KEY, STRONG, 6000, messages, usage);
+      console.log('Cheap writer failed after retries, using the stronger model: ' + e.message);
+      const w = await callClaude(API_KEY, TASK_MODELS.fullRewrite, 6000, writerMessages, usage);
       text = w.text; truncated = w.truncated;
     }
 
@@ -461,12 +561,12 @@ exports.handler = async function (event) {
       let problem = structureProblem(text, truncated);
       if (problem) {
         console.log('Structure problem from writer: ' + problem + ' — Sonnet rewrite.');
-        const retryMessages = messages.concat([
+        const retryMessages = writerMessages.concat([
           { role: 'assistant', content: text },
           { role: 'user', content: problem + ' Provide your complete full response again in the exact same format, but keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response fits completely, while still including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, AND every single plant line ending with its own "Attracts: [...]" tag naming specific pollinators, birds, or wildlife followed by "Lifecycle: [Perennial/Annual/Biennial]." Never drop either tag to save space.' }
         ]);
         try {
-          const r = await callClaude(API_KEY, STRONG, 6000, retryMessages, usage);
+          const r = await callClaude(API_KEY, TASK_MODELS.fullRewrite, 6000, retryMessages, usage);
           if (!structureProblem(r.text, r.truncated) || structureProblem(text, truncated)) { text = r.text; truncated = r.truncated; usedRewrite = true; }
         } catch (e) { console.log('Sonnet rewrite failed: ' + e.message); }
       }
@@ -506,7 +606,7 @@ exports.handler = async function (event) {
       status: 'done',
       body: JSON.stringify({ content: [{ type: 'text', text: text }] }),
       warning: warning,
-      debug: { cost: cost, usage: usage, writer: WRITER, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, finalText: text },
+      debug: { cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, finalText: text },
       promo: auth.k === 'promo',
       buyLink: auth.k === 'promo' && newCount >= RUN_CAP ? BUY_LINK : ''
     });
