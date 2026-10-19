@@ -343,7 +343,20 @@ async function rewritePlants(apiKey, model, siteDetails, flagged, usedNames, usa
 
 function rewriteTimelinePrompt(siteDetails, timeline, problems, plantNames) {
   return 'You are correcting the PLANTING TIMELINE of a native plant Greenprint.\n\nSITE DETAILS:\n' + siteDetails + '\n\nPLANTS IN THE LIST (use only these): ' + plantNames.join('; ') + '\n\nPROBLEMS TO FIX:\n- ' + problems.join('\n- ') + '\n\nCURRENT TIMELINE:\n' + timeline + '\n\n' +
-    'Rewrite the timeline so every problem is fixed. Keep every bullet that is already correct exactly as written and change only what is needed. Rules: exactly four entries in this order: Fall, Winter, Spring, Summer; each header is plain text alone on its line, such as "Fall (September–November):"; under each header one or more action bullets, each on its own line starting with "- ", each naming specific plants from the list and the exact action. Use the planting seasons that this specific county\'s cooperative extension service, state native plant society or other expert regional sources recommend; do not assume any default season. Keep the Summer bullet saying that once established (typically after the first one to two years) these native plants generally need no supplemental watering under normal regional rainfall, though occasional deep watering can help in severe heat waves or drought. If seed is scattered, always say to cover or press it into the soil. Output ONLY the four entries, with no title and no other text.';
+    'Rewrite the timeline so every problem is fixed. Keep every bullet that is already correct exactly as written and change only what is needed. Rules: exactly four entries in this order: Fall, Winter, Spring, Summer; each header is plain text alone on its line, such as "Fall (September–November):"; under each header one or more action bullets, each on its own line starting with "- ", each naming specific plants from the list and the exact action. Use the planting seasons that this specific county\'s cooperative extension service, state native plant society or other expert regional sources recommend; do not assume any default season. Keep the Summer bullet saying that once established (typically after the first one to two years) these native plants generally need no supplemental watering under normal regional rainfall, though occasional deep watering can help in severe heat waves or drought. If seed is scattered, always say to cover or press it into the soil. STRICT STRUCTURE: every plant in the list is named in exactly ONE bullet, under the single season that suits it best for this location (never the same plant under two seasons); do not write backup or alternate actions such as "if not planted in fall", "if you miss the window" or "otherwise"; group plants that share the same action and season into one bullet; do not mention any plant that is not in the list. Output ONLY the four entries, with no title and no other text.';
+}
+// Free code check of a rewritten timeline: every listed plant in exactly one bullet, no backup/alternate actions.
+function timelineProblem(t, plantNames) {
+  const bullets = t.split('\n').filter(function (l) { return /^-\s/.test(l.trim()); });
+  const issues = [];
+  plantNames.forEach(function (nm) {
+    const key = nm.toLowerCase();
+    const n = bullets.filter(function (b) { return b.toLowerCase().indexOf(key) !== -1; }).length;
+    if (n === 0) issues.push(nm + ' is missing');
+    else if (n > 1) issues.push(nm + ' appears in ' + n + ' bullets');
+  });
+  if (/\b(if (?:you )?(?:did not|didn't|have not|haven't|not|missed|miss)\b|otherwise\b|alternatively\b|as a backup\b)/i.test(bullets.join('\n'))) issues.push('contains a backup/alternate action');
+  return issues.length ? issues.join('; ') : '';
 }
 async function rewriteTimeline(apiKey, model, siteDetails, timeline, problems, plantNames, usage) {
   try {
@@ -355,6 +368,8 @@ async function rewriteTimeline(apiKey, model, siteDetails, timeline, problems, p
     const miss = missingSeasons('PLANTING TIMELINE\n' + t);
     if (miss.length) return { text: null, raw: raw, reason: 'missing seasons: ' + miss.join(',') };
     if (!/^-\s/m.test(t)) return { text: null, raw: raw, reason: 'no "- " bullets' };
+    const tp = timelineProblem(t, plantNames);
+    if (tp) return { text: null, raw: raw, reason: 'structure rule: ' + tp, issues: tp };
     return { text: t, raw: raw, reason: '' };
   } catch (e) { console.log('Timeline rewrite (' + model + ') failed: ' + e.message); return { text: null, raw: 'ERROR: ' + e.message, reason: 'error: ' + e.message }; }
 }
@@ -481,14 +496,22 @@ async function reviewGreenprint(apiKey, t, siteDetails, usage) {
     const problems = timelineProblems.slice();
     if (plantNamesChanged) problems.push('Some plants in the list were replaced. Make every timeline bullet refer only to plants in the final list (use their common names exactly as listed) and remove any plant that is no longer listed.');
     const names = getPlantLines(text).map(function (l) { return (l.match(/^-\s*(.+?)\s*\(/) || [, l])[1]; });
-    const tr = await rewriteTimeline(apiKey, TASK_MODELS.rewrite, siteDetails, getTimeline(text), problems, names, usage);
+    let tr = await rewriteTimeline(apiKey, TASK_MODELS.rewrite, siteDetails, getTimeline(text), problems, names, usage);
     detail.timelineRaw = tr.raw;
-    if (!tr.text) detail.timelineDecision = 'rejected: ' + tr.reason;
+    if (!tr.text && tr.issues) {
+      // cheap model broke the structure rules: one retry by the stronger model, told exactly what was wrong
+      detail.timelineDecision = 'cheap model rejected: ' + tr.reason;
+      const p2 = problems.concat(['A previous rewrite was rejected because: ' + tr.issues + '. Fix this.']);
+      const tr2 = await rewriteTimeline(apiKey, TASK_MODELS.escalate, siteDetails, getTimeline(text), p2, names, usage);
+      detail.timelineRaw2 = tr2.raw;
+      tr = tr2;
+    }
+    if (!tr.text) detail.timelineDecision += ' | rejected: ' + tr.reason;
     else {
       const next = setTimeline(text, tr.text);
       if (!next) detail.timelineDecision = 'rejected: could not place timeline';
       else if (structureProblem(next, false)) detail.timelineDecision = 'rejected: structure check: ' + structureProblem(next, false);
-      else { text = next; detail.timelineRewritten = true; changed++; detail.timelineDecision = 'accepted'; }
+      else { text = next; detail.timelineRewritten = true; changed++; detail.timelineDecision = (detail.timelineDecision ? detail.timelineDecision + ' | ' : '') + 'accepted'; }
     }
   }
 
