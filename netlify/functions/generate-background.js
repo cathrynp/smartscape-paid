@@ -30,7 +30,7 @@ const MODEL_OPTS = {
 const OPTS_REJECTED = {};
 const TASK_MODELS = {
   write: CHEAP,        // writes the Greenprint
-  judge: CHEAP,        // checks plants and timeline for definite errors (tested against Sonnet; change to STRONGER if it misses real errors)
+  judge: STRONGER,     // checks plants and timeline for definite errors. Tested 2026-10-19: Haiku 5.5 as judge gave contradictory flags and could not check county facts, so this job uses Sonnet 5.5 (~1¢)
   rewrite: CHEAP,      // rewrites flagged plant entries and the timeline
   escalate: STRONGER,  // only for entries the cheap model could not fix
   fullRewrite: STRONGER // only when the writer's output fails the structure check
@@ -241,7 +241,7 @@ function yardClass(siteDetails) {
 }
 function heightLimit(siteDetails) {
   const c = yardClass(siteDetails);
-  return c === 'tiny' ? 30 : c === 'small' ? 40 : c === 'medium' ? 60 : null;
+  return c === 'tiny' ? 30 : c === 'small' ? 35 : c === 'medium' ? 60 : null;
 }
 // First height-like number (upper end of a range) in the "Mature size:" part of an entry; null if none found.
 function plantMaxHeight(line) {
