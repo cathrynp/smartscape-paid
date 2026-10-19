@@ -21,6 +21,13 @@ const PRICES = {
 };
 const CHEAP = ['claude-haiku-5-5', 'claude-haiku-4-5-20251001'];
 const STRONGER = ['claude-sonnet-5-5', 'claude-sonnet-4-6'];
+// Request options per model (checked against Anthropic's effort docs 2026-10-18): the 5.5 models think by default and bill thinking as output,
+// so thinking is switched off (Haiku 5.5) or set to its lowest setting (Sonnet 5.5). If the API rejects these options the call is retried without them.
+const MODEL_OPTS = {
+  'claude-haiku-5-5': { thinking: { type: 'disabled' }, output_config: { effort: 'medium' } },
+  'claude-sonnet-5-5': { thinking: { type: 'between_tools' }, output_config: { effort: 'medium' } }
+};
+const OPTS_REJECTED = {};
 const TASK_MODELS = {
   write: CHEAP,        // writes the Greenprint
   judge: CHEAP,        // checks plants and timeline for definite errors (tested against Sonnet; change to STRONGER if it misses real errors)
@@ -144,6 +151,7 @@ async function callClaude(apiKey, modelOrList, maxTokens, messages, usageAcc, sy
       try {
         const body = { model: model, max_tokens: maxTokens, messages: messages };
         if (system) body.system = system;
+        if (MODEL_OPTS[model] && !OPTS_REJECTED[model]) Object.assign(body, MODEL_OPTS[model]);
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
@@ -153,12 +161,17 @@ async function callClaude(apiKey, modelOrList, maxTokens, messages, usageAcc, sy
         if (resp.status === 200) {
           const parsed = JSON.parse(raw);
           usagePlus(usageAcc, model, parsed.usage);
-          return {
-            text: (parsed.content && parsed.content[0] && parsed.content[0].text) || '',
-            truncated: parsed.stop_reason === 'max_tokens',
-            model: model
-          };
+          // answer = the text blocks only (newer models may put a thinking block first)
+          const blocks = Array.isArray(parsed.content) ? parsed.content : [];
+          const text = blocks.filter(function (b) { return b && b.type === 'text'; }).map(function (b) { return b.text || ''; }).join('');
+          if (!text.trim()) {
+            lastErr = new Error('Empty reply from ' + model + ' (stop: ' + parsed.stop_reason + ', blocks: ' + blocks.map(function (b) { return b && b.type; }).join(',') + ')');
+            break; // try the next model in the list
+          }
+          return { text: text, truncated: parsed.stop_reason === 'max_tokens', model: model };
         }
+        // option fields rejected -> retry this model without them
+        if (resp.status === 400 && /thinking|effort|output_config/i.test(raw) && MODEL_OPTS[model] && !OPTS_REJECTED[model]) { OPTS_REJECTED[model] = true; lastErr = new Error('Anthropic 400 (' + model + ') options: ' + raw.slice(0, 200)); attempt--; continue; }
         lastErr = new Error('Anthropic ' + resp.status + ' (' + model + '): ' + raw.slice(0, 200));
         // unknown / retired / unavailable model -> try the next model in the list
         if (resp.status === 404 || (resp.status === 400 && /model/i.test(raw))) { modelRejected = true; DEAD_MODELS[model] = true; break; }
@@ -166,7 +179,7 @@ async function callClaude(apiKey, modelOrList, maxTokens, messages, usageAcc, sy
       } catch (e) { lastErr = e; }
       await new Promise(function (r) { setTimeout(r, 2000 * (attempt + 1)); });
     }
-    if (!modelRejected && mi < models.length - 1 && lastErr && /Anthropic (5|429)/.test(String(lastErr.message))) continue; // overloaded: try next model too
+    if (!modelRejected && mi < models.length - 1 && lastErr && /Anthropic (5|429)|Empty reply/.test(String(lastErr.message))) continue; // overloaded or empty: try next model too
     if (!modelRejected) break;
   }
   throw lastErr || new Error('Anthropic call failed');
