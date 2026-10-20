@@ -590,6 +590,7 @@ exports.handler = async function (event) {
       text = w.text; truncated = w.truncated;
     }
 
+    const writerRaw = text;
     const isMismatch = /PHOTO_MISMATCH:/.test(text);
     let reviewed = 0, usedRewrite = false, reviewerOk = true, reviewerRan = false, reviewerNotes = '', reviewerProposed = 0, reviewerDetail = null;
     if (!isMismatch) {
@@ -638,11 +639,15 @@ exports.handler = async function (event) {
         .setJSON(jobId, { time: new Date().toISOString(), cost: cost, usage: usage, rewrite: usedRewrite, reviewerFixes: reviewed, reviewerOk: reviewerOk });
     } catch (e) { /* non-blocking */ }
 
+    const debugNote = { time: new Date().toISOString(), cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, writerRaw: writerRaw, finalText: text };
+    try {
+      await getStore({ name: 'run-debug', siteID: SITE_ID, token: process.env.BLOBS_TOKEN }).setJSON(jobId, debugNote);
+    } catch (e) { console.log('Debug note save failed: ' + e.message); }
     await store.setJSON(jobId, {
       status: 'done',
       body: JSON.stringify({ content: [{ type: 'text', text: text }] }),
       warning: warning,
-      debug: { cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, finalText: text },
+      debug: { cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, writerRaw: writerRaw, finalText: text },
       promo: auth.k === 'promo',
       buyLink: auth.k === 'promo' && newCount >= RUN_CAP ? BUY_LINK : ''
     });
