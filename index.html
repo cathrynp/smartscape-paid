@@ -1162,13 +1162,14 @@
             userLat = null; userLng = null; // never reuse the previous Greenprint's location
             var geoResp = await fetch('https://api.zippopotam.us/us/'+zip);
             if (geoResp.ok) { var geoData = await geoResp.json(); if (geoData.places && geoData.places[0]) { realCity = geoData.places[0]['place name']; realState = geoData.places[0]['state']; userLat = parseFloat(geoData.places[0]['latitude']); userLng = parseFloat(geoData.places[0]['longitude']); } }
-            if (userLat === null) { // zip not in the lookup: use the closest nearby zip just to estimate distance to nurseries
-                var zn = parseInt(zip, 10);
-                for (var gi = 1; gi <= 8 && userLat === null; gi++) {
-                    var tries = [zn - gi, zn + gi];
-                    for (var ti = 0; ti < 2 && userLat === null; ti++) {
-                        try { var nr = await fetch('https://api.zippopotam.us/us/' + String(tries[ti]).padStart(5, '0')); if (nr.ok) { var nd = await nr.json(); if (nd.places && nd.places[0]) { userLat = parseFloat(nd.places[0]['latitude']); userLng = parseFloat(nd.places[0]['longitude']); } } } catch (ne) {}
-                    }
+            if (userLat === null) { // zip not in the lookup: use the closest known zip within 40 numbers, just to estimate distance to nurseries
+                var zn = parseInt(zip, 10), cands = [];
+                for (var gi = 1; gi <= 40; gi++) { cands.push(zn - gi); cands.push(zn + gi); }
+                var found = await Promise.all(cands.map(function(c) {
+                    return fetch('https://api.zippopotam.us/us/' + String(c).padStart(5, '0')).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+                }));
+                for (var fi = 0; fi < found.length && userLat === null; fi++) {
+                    if (found[fi] && found[fi].places && found[fi].places[0]) { userLat = parseFloat(found[fi].places[0]['latitude']); userLng = parseFloat(found[fi].places[0]['longitude']); }
                 }
             }
         } catch(geoErr) { console.log('Zip lookup failed:', geoErr); }
