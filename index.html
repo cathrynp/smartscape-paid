@@ -869,6 +869,7 @@
             var within = local.filter(function(n) { return n.lat && n.lng && geoDistance(userLat, userLng, n.lat, n.lng) <= 250; });
             if (within.length) local = within;
         }
+        if (userLat && userLng && local.length && local[0].lat && local[0].lng && geoDistance(userLat, userLng, local[0].lat, local[0].lng) > 250) local = []; // nothing within 250 mi: say so, list mail-order only
         var zipNum = parseInt(currentZip) || 0;
         var national = NURSERIES.filter(function(n) { return n.regions.indexOf('national') !== -1 && isPurchasableNursery(n) && !(n.noShipZip && n.noShipZip.some(function(r) { return zipNum >= r[0] && zipNum <= r[1]; })); });
         var showLocal = filter && filter !== 'all' ? local.filter(function(n) { return n.tags.indexOf(filter) !== -1; }) : local;
@@ -876,9 +877,9 @@
         document.getElementById('r-nurseries').textContent = local.length || '—';
         var nearestMi = (userLat && userLng && local.length && local[0].lat && local[0].lng) ? geoDistance(userLat, userLng, local[0].lat, local[0].lng) : null;
         var farAway = nearestMi !== null && nearestMi > 100;
-        document.getElementById('nursery-title').textContent = farAway ? '🏡 Native plant nurseries in your region' : '🏡 Native plant nurseries near you';
+        document.getElementById('nursery-title').textContent = farAway ? '🏡 Native plant nurseries in your area' : '🏡 Native plant nurseries near you';
         document.getElementById('nursery-label').textContent = local.length ? (farAway ? 'Regional nurseries' : 'Local nurseries') : 'Ships nationwide';
-        document.getElementById('r-nursery-sub').textContent = local.length ? (farAway ? local.length + ' native nurseries in your region — the nearest is about ' + Math.round(nearestMi) + ' miles from zip ' + currentZip : local.length + ' local nurseries near zip ' + currentZip + ' — carry native plants for your region') : 'No local nurseries in our database yet for this region — national mail-order options below ship anywhere in the US';
+        document.getElementById('r-nursery-sub').textContent = local.length ? (farAway ? local.length + ' native nurseries in your area — the nearest is about ' + Math.round(nearestMi) + ' miles from zip ' + currentZip : local.length + ' local nurseries near zip ' + currentZip + ' — carry native plants for your region') : 'No local nurseries in our database yet for your area — national mail-order options below ship anywhere in the US';
         var html = '';
         if (showLocal.length) { html += showLocal.map(renderRow).join(''); }
         if (showNat.length) { html += '<div class="result-card-header" style="margin-top:' + (showLocal.length ? '1.25rem' : '0') + ';border-radius:8px;"><h3>🚚 Order online</h3><p>Nurseries that ship nationwide</p></div>'; html += showNat.map(renderRow).join(''); }
@@ -1158,8 +1159,18 @@
         [0,1,2,3,4].forEach(function(i) { setTimeout(function() { var el = document.getElementById('as'+i); if (el) el.classList.add('on'); }, 500 + i*4000); });
         var realCity = '', realState = '';
         try {
+            userLat = null; userLng = null; // never reuse the previous Greenprint's location
             var geoResp = await fetch('https://api.zippopotam.us/us/'+zip);
             if (geoResp.ok) { var geoData = await geoResp.json(); if (geoData.places && geoData.places[0]) { realCity = geoData.places[0]['place name']; realState = geoData.places[0]['state']; userLat = parseFloat(geoData.places[0]['latitude']); userLng = parseFloat(geoData.places[0]['longitude']); } }
+            if (userLat === null) { // zip not in the lookup: use the closest nearby zip just to estimate distance to nurseries
+                var zn = parseInt(zip, 10);
+                for (var gi = 1; gi <= 8 && userLat === null; gi++) {
+                    var tries = [zn - gi, zn + gi];
+                    for (var ti = 0; ti < 2 && userLat === null; ti++) {
+                        try { var nr = await fetch('https://api.zippopotam.us/us/' + String(tries[ti]).padStart(5, '0')); if (nr.ok) { var nd = await nr.json(); if (nd.places && nd.places[0]) { userLat = parseFloat(nd.places[0]['latitude']); userLng = parseFloat(nd.places[0]['longitude']); } } } catch (ne) {}
+                    }
+                }
+            }
         } catch(geoErr) { console.log('Zip lookup failed:', geoErr); }
         var locationLine = realCity ? ('- Actual city/town for this zip code (confirmed, use this exact name): '+realCity+', '+realState+'\n') : '';
         var ecoregion = getEcoregion(zip);
@@ -1204,6 +1215,7 @@
                 }
             }
             if (!pollResult) { throw new Error('This is taking longer than expected. This may be due to high demand on the AI powering Greenprint Generator, not an issue with your request. Please try again in a moment.'); }
+            try { if (pollResult.debug) { var oldDbg = document.getElementById('gp-debug'); if (oldDbg) oldDbg.remove(); var dbgEl = document.createElement('script'); dbgEl.type = 'application/json'; dbgEl.id = 'gp-debug'; dbgEl.textContent = JSON.stringify(pollResult.debug).replace(/</g, '\\u003c'); document.body.appendChild(dbgEl); window.__gpDebug = pollResult.debug; } } catch (dbgErr) {}
             var data = JSON.parse(pollResult.body);
             if (data.error) throw new Error(data.error.message || 'API error');
             var text = data.content && data.content[0] ? data.content[0].text : '';
