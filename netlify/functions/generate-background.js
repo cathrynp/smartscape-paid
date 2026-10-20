@@ -101,6 +101,11 @@ function usagePlus(acc, model, u) {
   const a = acc[model] || (acc[model] = { in: 0, out: 0, calls: 0 });
   a.in += u.input_tokens || 0; a.out += u.output_tokens || 0; a.calls++;
 }
+function costByModel(acc) {
+  const out = {};
+  for (const m in acc) { const p = PRICES[m] || [3, 15]; out[m] = Math.round((acc[m].in * p[0] / 1e6 + acc[m].out * p[1] / 1e6) * 10000) / 10000; }
+  return out;
+}
 function costOf(acc) {
   let total = 0;
   for (const m in acc) { const p = PRICES[m] || [3, 15]; total += acc[m].in * p[0] / 1e6 + acc[m].out * p[1] / 1e6; }
@@ -591,6 +596,7 @@ exports.handler = async function (event) {
     }
 
     const writerRaw = text;
+    let structureNote = '';
     const isMismatch = /PHOTO_MISMATCH:/.test(text);
     let reviewed = 0, usedRewrite = false, reviewerOk = true, reviewerRan = false, reviewerNotes = '', reviewerProposed = 0, reviewerDetail = null;
     if (!isMismatch) {
@@ -598,14 +604,16 @@ exports.handler = async function (event) {
       let problem = structureProblem(text, truncated);
       if (problem) {
         console.log('Structure problem from writer: ' + problem + ' — Sonnet rewrite.');
+        structureNote = problem + (truncated ? ' [writer reply was cut off at the token limit]' : '');
         const retryMessages = writerMessages.concat([
           { role: 'assistant', content: text },
           { role: 'user', content: problem + ' Provide your complete full response again in the exact same format, but keep every section — especially each plant description and the PLANTING TIMELINE — as concise as the instructions allow so the full response fits completely, while still including all FOUR seasons (Fall, Winter, Spring, Summer) as separate headers each with at least one bullet, AND every single plant line ending with its own "Attracts: [...]" tag naming specific pollinators, birds, or wildlife followed by "Lifecycle: [Perennial/Annual/Biennial]." Never drop either tag to save space.' }
         ]);
         try {
           const r = await callClaude(API_KEY, TASK_MODELS.fullRewrite, 6000, retryMessages, usage);
-          if (!structureProblem(r.text, r.truncated) || structureProblem(text, truncated)) { text = r.text; truncated = r.truncated; usedRewrite = true; }
-        } catch (e) { console.log('Sonnet rewrite failed: ' + e.message); }
+          if (!structureProblem(r.text, r.truncated) || structureProblem(text, truncated)) { text = r.text; truncated = r.truncated; usedRewrite = true; structureNote += ' | Sonnet rewrite used'; }
+          else structureNote += ' | Sonnet rewrite also failed the check, kept the original';
+        } catch (e) { console.log('Sonnet rewrite failed: ' + e.message); structureNote += ' | Sonnet rewrite errored: ' + e.message; }
       }
 
       text = applyCodeFixes(text);
@@ -639,7 +647,7 @@ exports.handler = async function (event) {
         .setJSON(jobId, { time: new Date().toISOString(), cost: cost, usage: usage, rewrite: usedRewrite, reviewerFixes: reviewed, reviewerOk: reviewerOk });
     } catch (e) { /* non-blocking */ }
 
-    const debugNote = { time: new Date().toISOString(), cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, writerRaw: writerRaw, finalText: text };
+    const debugNote = { time: new Date().toISOString(), cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, writerRaw: writerRaw, structureProblem: structureNote, costByModel: costByModel(usage), finalText: text };
     try {
       await getStore({ name: 'run-debug', siteID: SITE_ID, token: process.env.BLOBS_TOKEN }).setJSON(jobId, debugNote);
     } catch (e) { console.log('Debug note save failed: ' + e.message); }
@@ -647,7 +655,7 @@ exports.handler = async function (event) {
       status: 'done',
       body: JSON.stringify({ content: [{ type: 'text', text: text }] }),
       warning: warning,
-      debug: { cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, writerRaw: writerRaw, finalText: text },
+      debug: { cost: cost, usage: usage, writer: writerModel, models: TASK_MODELS, rewrite: usedRewrite, reviewerRan: reviewerRan, reviewerOk: reviewerOk, reviewerProposed: reviewerProposed, reviewerApplied: reviewed, reviewerNotes: reviewerNotes, reviewerDetail: reviewerDetail, writerRaw: writerRaw, structureProblem: structureNote, costByModel: costByModel(usage), finalText: text },
       promo: auth.k === 'promo',
       buyLink: auth.k === 'promo' && newCount >= RUN_CAP ? BUY_LINK : ''
     });
